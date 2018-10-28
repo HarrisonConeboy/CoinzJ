@@ -1,11 +1,13 @@
 package com.example.s1658030.coinzj;
 
 
+import android.content.Intent;
 import android.location.Location;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.mapbox.android.core.location.LocationEngine;
@@ -95,7 +97,7 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback,
                     String id = f.properties().get("id").getAsString();
                     String currency = f.properties().get("currency").getAsString();
                     String symbol = f.properties().get("marker-symbol").getAsString();
-                    Float value = f.properties().get("value").getAsFloat();
+                    Double value = f.properties().get("value").getAsDouble();
                     LatLng latLng = new LatLng((((Point) f.geometry()).latitude()),
                             (((Point) f.geometry()).longitude()));
                     //Create the new coin
@@ -120,6 +122,15 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback,
         }
     }
 
+    public void goBack(View view) {
+        Intent intent = new Intent(this, MainMenu.class);
+        startActivity(intent);
+    }
+
+    public void goBank(View view) {
+        Intent intent = new Intent(this, Bank.class);
+        startActivity(intent);
+    }
 
     private void enableLocation() {
         if (PermissionsManager.areLocationPermissionsGranted(this)) {

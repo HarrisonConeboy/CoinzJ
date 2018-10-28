@@ -10,9 +10,13 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ExecutionException;
+
 
 public class MainMenu extends AppCompatActivity {
 
@@ -23,6 +27,11 @@ public class MainMenu extends AppCompatActivity {
     private String mapData;
     private String preferencesFile = "MyPrefsFile";
     private String downloadDate;
+    private String shil;
+    private String dolr;
+    private String quid;
+    private String peny;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,9 +40,23 @@ public class MainMenu extends AppCompatActivity {
 
     }
 
-    public void gotomap(View view){
+    public void goToMap(View view){
         Intent intent = new Intent(this, Map.class);
         intent.putExtra("mapData",mapData);
+        intent.putExtra("shil",shil);
+        intent.putExtra("dolr",dolr);
+        intent.putExtra("quid",quid);
+        intent.putExtra("peny",peny);
+        startActivity(intent);
+    }
+
+    public void goToBank(View view) {
+        Intent intent = new Intent(this, Bank.class);
+        intent.putExtra("mapData",mapData);
+        intent.putExtra("shil",shil);
+        intent.putExtra("dolr",dolr);
+        intent.putExtra("quid",quid);
+        intent.putExtra("peny",peny);
         startActivity(intent);
     }
 
@@ -45,8 +68,11 @@ public class MainMenu extends AppCompatActivity {
         downloadDate = settings.getString("lastDownloadDate","");
         if (downloadDate.equals(todaysDate)) {
             Log.d(tag, "Already downloaded today's map");
-            Toast.makeText(this, "Already downloaded today's map", Toast.LENGTH_LONG).show();
             mapData = settings.getString("lastMap", "");
+            shil = settings.getString("shil","");
+            dolr = settings.getString("dolr","");
+            quid = settings.getString("quid","");
+            peny = settings.getString("peny","");
         } else {
             Log.d(tag, "Downloading today's map");
             Toast.makeText(this, "Downloading map", Toast.LENGTH_LONG).show();
@@ -60,9 +86,17 @@ public class MainMenu extends AppCompatActivity {
             } catch (ExecutionException e){
                 e.printStackTrace();
             }
+            try {
+                JSONObject object = new JSONObject(mapData);
+                JSONObject rates = object.getJSONObject("rates");
+                shil = rates.getString("SHIL");
+                quid = rates.getString("QUID");
+                peny = rates.getString("PENY");
+                dolr = rates.getString("DOLR");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
-
-
     }
 
     @Override
@@ -73,6 +107,10 @@ public class MainMenu extends AppCompatActivity {
         SharedPreferences.Editor editor = settings.edit();
         editor.putString("lastDownloadDate",downloadDate);
         editor.putString("lastMap",mapData);
+        editor.putString("shil",shil);
+        editor.putString("dolr",dolr);
+        editor.putString("quid",quid);
+        editor.putString("peny",peny);
         editor.apply();
     }
 

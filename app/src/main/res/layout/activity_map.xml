@@ -6,13 +6,43 @@
     android:layout_height="match_parent"
     tools:context=".Map">
 
+    <Button
+        android:id="@+id/backButtonMenu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/mapbox_blue"
+        android:onClick="goBack"
+        android:text="Back to menu"
+        android:textColor="@color/common_google_signin_btn_text_dark_pressed"
+        mapbox:layout_constraintBottom_toBottomOf="parent"
+        mapbox:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/bankButton2"
+        android:layout_width="124dp"
+        android:layout_height="47dp"
+        android:backgroundTint="@color/mapbox_blue"
+        android:onClick="goBank"
+        android:text="To Bank"
+        android:textColor="@color/common_google_signin_btn_text_dark_pressed"
+        mapbox:layout_constraintBottom_toBottomOf="parent"
+        mapbox:layout_constraintEnd_toEndOf="parent" />
+
     <com.mapbox.mapboxsdk.maps.MapView
         android:id="@+id/mapView"
-        android:layout_height="match_parent"
         android:layout_width="match_parent"
-        mapbox:mapbox_cameraTargetLat = "55.944"
-        mapbox:mapbox_cameraTargetLng = "-3.188396"
-        mapbox:mapbox_cameraZoom = "15"
-        mapbox:mapbox_styleUrl = "@string/mapbox_style_mapbox_streets" />
+        android:layout_height="match_parent"
+        mapbox:layout_constraintBottom_toBottomOf="parent"
+        mapbox:layout_constraintEnd_toEndOf="parent"
+        mapbox:layout_constraintHorizontal_bias="0.0"
+        mapbox:layout_constraintStart_toStartOf="parent"
+        mapbox:layout_constraintTop_toTopOf="parent"
+        mapbox:layout_constraintVertical_bias="0.0"
+        mapbox:mapbox_cameraTargetLat="55.944"
+        mapbox:mapbox_cameraTargetLng="-3.188396"
+        mapbox:mapbox_cameraZoom="16"
+        mapbox:mapbox_styleUrl="@string/mapbox_style_mapbox_streets">
+
+    </com.mapbox.mapboxsdk.maps.MapView>
 
 </android.support.constraint.ConstraintLayout>

@@ -3,11 +3,11 @@ package com.example.s1658030.coinzj;
 public class Coin {
 
     private String id;
-    private Float value;
+    private Double value;
     private String currency;
 
 
-    public Coin(String id, Float value, String currency) {
+    public Coin(String id, Double value, String currency) {
         this.id = id;
         this.value = value;
         this.currency = currency;
@@ -18,7 +18,7 @@ public class Coin {
         return id;
     }
 
-    public Float getValue() {
+    public Double getValue() {
         return value;
     }
 
@@ -34,7 +34,7 @@ public class Coin {
         this.id = id;
     }
 
-    public void setValue(Float value) {
+    public void setValue(Double value) {
         this.value = value;
     }
 
