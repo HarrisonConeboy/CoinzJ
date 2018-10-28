@@ -37,6 +37,7 @@ import com.mapbox.mapboxsdk.style.layers.Layer;
 import com.mapbox.mapboxsdk.style.light.Position;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class Map extends AppCompatActivity implements OnMapReadyCallback,
@@ -52,6 +53,8 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback,
     private Location originLocation;
     private String mapData;
     private MarkerOptions markerOptions;
+    private HashMap<String,Coin> coins = new HashMap<String,Coin>(50);
+
 
 
     @Override
@@ -86,20 +89,33 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback,
             IconFactory iconFactory = IconFactory.getInstance(Map.this);
             MarkerIcons markerIcons = new MarkerIcons();
 
-
             for (Feature f : features) {
                 if (f.geometry() instanceof Point) {
-                    String key = f.properties().get("currency").getAsString()
-                            + f.properties().get("marker-symbol").getAsString();
-                    Integer res = markerIcons.masterKey.get(key);
-                    Icon icon = iconFactory.fromResource(res);
+
+                    String id = f.properties().get("id").getAsString();
+                    String currency = f.properties().get("currency").getAsString();
+                    String symbol = f.properties().get("marker-symbol").getAsString();
+                    Float value = f.properties().get("value").getAsFloat();
                     LatLng latLng = new LatLng((((Point) f.geometry()).latitude()),
                             (((Point) f.geometry()).longitude()));
-                    map.addMarker(new MarkerOptions().title(f.properties().get("marker-symbol")
-                            .getAsString()).snippet(f.properties().get("currency")
-                            .getAsString()).position(latLng).icon(icon));
+                    //Create the new coin
+                    Coin coin = new Coin(id,value,currency);
+
+                    //Update coins hashmap with each coin
+                    coins.put(id,coin);
+
+                    //Determine which marker to use
+                    String key = currency + symbol;
+                    Integer res = markerIcons.masterKey.get(key);
+                    Icon icon = iconFactory.fromResource(res);
+
+                    //Placing marker on the map with relevant information
+                    String title = symbol + "-" + currency;
+                    map.addMarker(new MarkerOptions().title(title).snippet(id)
+                            .position(latLng).icon(icon));
                 }
             }
+
             enableLocation();
         }
     }
