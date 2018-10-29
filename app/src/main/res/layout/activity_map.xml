@@ -13,7 +13,7 @@
         android:backgroundTint="@color/mapbox_blue"
         android:onClick="goBack"
         android:text="Back to menu"
-        android:textColor="@color/common_google_signin_btn_text_dark_pressed"
+        android:textColor="@android:color/white"
         mapbox:layout_constraintBottom_toBottomOf="parent"
         mapbox:layout_constraintStart_toStartOf="parent" />
 
@@ -24,7 +24,7 @@
         android:backgroundTint="@color/mapbox_blue"
         android:onClick="goBank"
         android:text="To Bank"
-        android:textColor="@color/common_google_signin_btn_text_dark_pressed"
+        android:textColor="@android:color/white"
         mapbox:layout_constraintBottom_toBottomOf="parent"
         mapbox:layout_constraintEnd_toEndOf="parent" />
 

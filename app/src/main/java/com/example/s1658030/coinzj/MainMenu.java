@@ -10,6 +10,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -32,13 +35,11 @@ public class MainMenu extends AppCompatActivity {
     private String quid;
     private String peny;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_menu);
-
-    }
+        }
 
     public void goToMap(View view){
         Intent intent = new Intent(this, Map.class);
@@ -99,6 +100,12 @@ public class MainMenu extends AppCompatActivity {
         }
     }
 
+    public void signOut(View view) {
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        mAuth.signOut();
+        startActivity(new Intent(MainMenu.this, SignIn.class));
+    }
+
     @Override
     public void onStop() {
         super.onStop();
@@ -113,5 +120,7 @@ public class MainMenu extends AppCompatActivity {
         editor.putString("peny",peny);
         editor.apply();
     }
+
+
 
 }
