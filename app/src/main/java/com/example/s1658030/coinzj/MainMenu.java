@@ -129,6 +129,7 @@ public class MainMenu extends AppCompatActivity {
     public void signOut(View view) {
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         mAuth.signOut();
+        stopService(svc);
         startActivity(new Intent(MainMenu.this, SignIn.class));
     }
 
