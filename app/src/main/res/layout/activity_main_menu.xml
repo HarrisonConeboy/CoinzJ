@@ -4,8 +4,49 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg"
     tools:context=".MainMenu">
 
+
+    <TextView
+        android:id="@+id/kingSloth"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="20dp"
+        android:text="King Sloth"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="65dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/thesloth"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.55"
+        />
+
+    <Switch
+        android:id="@+id/musicSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:checked="true"
+        android:showText="true"
+        android:text="Music"
+        android:textColor="@android:color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:checked="true" />
 
     <Button
         android:id="@+id/mapButton"
@@ -15,15 +56,15 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:backgroundTint="#d8b234"
         android:onClick="goToMap"
         android:text="Collect Coinz"
         android:textColor="@android:color/white"
-        android:backgroundTint="@color/mapbox_blue"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.353" />
+        app:layout_constraintVertical_bias="0.57" />
 
     <Button
         android:id="@+id/bankButton"
@@ -33,26 +74,38 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:backgroundTint="#d8b234"
+        android:onClick="goToBank"
         android:text="Bank"
         android:textColor="@android:color/white"
-        android:backgroundTint="@color/mapbox_blue"
-        android:onClick="goToBank"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.534" />
+        app:layout_constraintVertical_bias="0.69" />
 
     <Button
         android:id="@+id/signOutButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:text="Sign Out"
+        android:layout_width="99dp"
+        android:layout_height="52dp"
+        android:layout_marginBottom="4dp"
+        android:layout_marginEnd="4dp"
+        android:backgroundTint="#bd2424"
         android:onClick="signOut"
+        android:text="Sign Out"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/tradeButton"
+        android:layout_width="99dp"
+        android:layout_height="52dp"
+        android:layout_marginBottom="4dp"
+        android:layout_marginStart="4dp"
+        android:text="Trade"
         android:textColor="@android:color/white"
         android:backgroundTint="@color/mapbox_blue"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintStart_toStartOf="parent" />
 </android.support.constraint.ConstraintLayout>

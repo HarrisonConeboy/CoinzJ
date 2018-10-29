@@ -3,11 +3,14 @@ package com.example.s1658030.coinzj;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -34,11 +37,33 @@ public class MainMenu extends AppCompatActivity {
     private String dolr;
     private String quid;
     private String peny;
+    private Intent svc;
+
+    private Switch music;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_menu);
+        music = findViewById(R.id.musicSwitch);
+
+        svc = new Intent(this, BackgroundSoundService.class);
+        svc.setAction("com.example.s1658030.coinzj.BackgroundSoundService");
+
+        music.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    startService(svc);
+                } else {
+                    stopService(svc);
+                }
+            }
+        });
+        if (music.isChecked()) {
+            startService(svc);
+        }
+
         }
 
     public void goToMap(View view){
@@ -48,6 +73,7 @@ public class MainMenu extends AppCompatActivity {
         intent.putExtra("dolr",dolr);
         intent.putExtra("quid",quid);
         intent.putExtra("peny",peny);
+        stopService(svc);
         startActivity(intent);
     }
 
