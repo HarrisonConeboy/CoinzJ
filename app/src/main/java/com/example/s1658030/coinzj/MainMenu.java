@@ -5,23 +5,32 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.Map;
 
 
 public class MainMenu extends AppCompatActivity {
@@ -40,12 +49,19 @@ public class MainMenu extends AppCompatActivity {
     private Intent svc;
 
     private Switch music;
+    private FirebaseUser user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_menu);
         music = findViewById(R.id.musicSwitch);
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            String email = user.getEmail();
+        }
 
         svc = new Intent(this, BackgroundSoundService.class);
         svc.setAction("com.example.s1658030.coinzj.BackgroundSoundService");
@@ -67,23 +83,14 @@ public class MainMenu extends AppCompatActivity {
         }
 
     public void goToMap(View view){
-        Intent intent = new Intent(this, Map.class);
+        Intent intent = new Intent(this, MapScreen.class);
         intent.putExtra("mapData",mapData);
-        intent.putExtra("shil",shil);
-        intent.putExtra("dolr",dolr);
-        intent.putExtra("quid",quid);
-        intent.putExtra("peny",peny);
         stopService(svc);
         startActivity(intent);
     }
 
     public void goToBank(View view) {
         Intent intent = new Intent(this, Bank.class);
-        intent.putExtra("mapData",mapData);
-        intent.putExtra("shil",shil);
-        intent.putExtra("dolr",dolr);
-        intent.putExtra("quid",quid);
-        intent.putExtra("peny",peny);
         startActivity(intent);
     }
 
@@ -96,10 +103,6 @@ public class MainMenu extends AppCompatActivity {
         if (downloadDate.equals(todaysDate)) {
             Log.d(tag, "Already downloaded today's map");
             mapData = settings.getString("lastMap", "");
-            shil = settings.getString("shil","");
-            dolr = settings.getString("dolr","");
-            quid = settings.getString("quid","");
-            peny = settings.getString("peny","");
         } else {
             Log.d(tag, "Downloading today's map");
             Toast.makeText(this, "Downloading map", Toast.LENGTH_LONG).show();
@@ -147,7 +150,5 @@ public class MainMenu extends AppCompatActivity {
         editor.putString("peny",peny);
         editor.apply();
     }
-
-
 
 }

@@ -13,9 +13,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainMenu">
-        </activity>
-        <activity android:name=".Map" />
+        <activity android:name=".MainMenu"></activity>
         <activity android:name=".Bank" />
         <activity android:name=".SignIn">
             <intent-filter>
@@ -24,7 +22,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:enabled="true" android:name=".BackgroundSoundService" />
+
+        <service
+            android:name=".BackgroundSoundService"
+            android:enabled="true" />
+
+        <activity android:name=".MapScreen"></activity>
     </application>
 
 </manifest>
