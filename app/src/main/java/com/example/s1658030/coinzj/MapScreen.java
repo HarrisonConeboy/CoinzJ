@@ -16,6 +16,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.mapbox.android.core.location.LocationEngine;
 import com.mapbox.android.core.location.LocationEngineListener;
@@ -59,11 +60,7 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
     private MarkerOptions markerOptions;
     private String preferencesFile = "MyPrefsFiles";
 
-    private HashMap<String,Coin> coins = new HashMap<String,Coin>(50);
-    private String cId;
-    private String cCurrency = "currency";
-    private String cValue = "value";
-
+    private HashMap<String,Coin> coins = new HashMap<String,Coin>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,16 +98,21 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
                 if (f.geometry() instanceof Point) {
 
                     String id = f.properties().get("id").getAsString();
-                    String currency = f.properties().get("currency").getAsString();
-                    String symbol = f.properties().get("marker-symbol").getAsString();
                     Double value = f.properties().get("value").getAsDouble();
+                    String currency = f.properties().get("currency").getAsString();
+                    FirebaseFirestore db = FirebaseFirestore.getInstance();
+                    FirebaseAuth mAuth = FirebaseAuth.getInstance();
+                    FirebaseUser user = mAuth.getCurrentUser();
+                    String email = user.getEmail();
+
+                    String symbol = f.properties().get("marker-symbol").getAsString();
                     LatLng latLng = new LatLng((((Point) f.geometry()).latitude()),
                             (((Point) f.geometry()).longitude()));
                     //Create the new coin
-                    Coin coine = new Coin(id,value,currency);
+                    Coin tempCoin = new Coin(id,value,currency);
 
                     //Update hashmap
-                    coins.put(id,coine);
+                    coins.put(id,tempCoin);
 
                     //Determine which marker to use
                     String key = currency + symbol;
@@ -121,8 +123,8 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
                     String title = symbol + "-" + currency;
                     map.addMarker(new MarkerOptions().title(title).snippet(id)
                             .position(latLng).icon(icon));
+                    }
                 }
-            }
 
             enableLocation();
         }
@@ -217,26 +219,34 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
                         (location.getLatitude() >= m.getPosition().getLatitude() - 0.00019) &&
                         ((location.getLongitude() <= m.getPosition().getLongitude()+ 0.00019) &&
                                 (location.getLongitude() >= m.getPosition().getLongitude() - 0.00019)))) {
-                    /*Map<String,Object> coin = new HashMap<>();
-                    cId = m.getTitle();
-                    Double value = coins.get(cId).getValue();
-                    String currency = coins.get(cId).getCurrency();
-                    coin.put(cValue,value);
-                    coin.put(cCurrency,currency);
+
                     FirebaseAuth mAuth = FirebaseAuth.getInstance();
                     FirebaseUser user = mAuth.getCurrentUser();
+                    Map<String,Object> coin = new HashMap<>();
+
+                    String id = m.getSnippet();
+                    Double value = coins.get(id).getValue();
+                    String currency = coins.get(id).getCurrency();
+                    coin.put("value",value);
+                    coin.put("currency",currency);
                     String email = user.getEmail();
-                    db.collection("users").document(email).set(coin).addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            Toast.makeText(MapScreen.this, "Added coin", Toast.LENGTH_SHORT).show();
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(MapScreen.this, "Faaaaail", Toast.LENGTH_SHORT).show();
-                        }
-                    });*/
+
+                    db.collection("users").document(email).collection("Wallet").document(id).set(coin)
+                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    Toast.makeText(MapScreen.this, "Collected " + m.getTitle(), Toast.LENGTH_SHORT).show();
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Toast.makeText(MapScreen.this, "Failed to update Wallet", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
+                    db.collection("users").document(email)
+                            .collection("Collected").document(id).set(coin);
 
                     removing(m);
                 }
@@ -245,10 +255,11 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
     }
 
     private void removing(Marker m) {
-        map.removeMarker(m);
+        //Make ding noise
         MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.coinding);
         mediaPlayer.start();
-        //Toast.makeText(this, "Remove marker", Toast.LENGTH_SHORT).show();
+
+        map.removeMarker(m);
     }
 
     @Override
