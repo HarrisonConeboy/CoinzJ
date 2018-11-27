@@ -21,6 +21,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -113,6 +114,16 @@ public class DepositCoins extends AppCompatActivity {
             }
         });
 
+        Button show = findViewById(R.id.showGold);
+        show.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                depositCoins();
+                show.setVisibility(View.GONE);
+            }
+        });
+
+
     }
 
 
@@ -124,6 +135,7 @@ public class DepositCoins extends AppCompatActivity {
                     gold = documentSnapshot.getDouble("Gold");
                 }
             });
+
         } else {
             Double total = 0.0;
             add = 0.0;
@@ -133,6 +145,10 @@ public class DepositCoins extends AppCompatActivity {
                     gold = documentSnapshot.getDouble("Gold");
                 }
             });
+
+            TextView currentGold = findViewById(R.id.currentGold);
+            DecimalFormat format = new DecimalFormat("#.##");
+            currentGold.setText(String.valueOf(format.format(gold)));
 
 
             Double result = gold;
@@ -171,8 +187,6 @@ public class DepositCoins extends AppCompatActivity {
                 db.collection("users").document(email).set(g);
                 Toast.makeText(this, "Deposited: " + String.valueOf(total), Toast.LENGTH_SHORT).show();
                 backToBank();
-            } else {
-                Toast.makeText(this, "Please select some coins", Toast.LENGTH_SHORT).show();
             }
         }
     }

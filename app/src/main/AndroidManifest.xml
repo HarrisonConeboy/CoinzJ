@@ -29,10 +29,9 @@
 
         <activity android:name=".MapScreen" />
         <activity android:name=".DepositCoins" />
-        <activity
-            android:name=".Friends"
-            android:windowSoftInputMode="adjustPan"></activity>
-        <activity android:name=".SpareChangeSend"></activity>
+        <activity android:name=".Friends" />
+        <activity android:name=".SpareChangeSend" />
+        <activity android:name=".WalletSend"></activity>
     </application>
 
 </manifest>

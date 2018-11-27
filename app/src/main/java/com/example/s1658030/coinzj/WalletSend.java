@@ -27,9 +27,9 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class SpareChangeSend extends AppCompatActivity {
+public class WalletSend extends AppCompatActivity {
     private ListView listView;
-    private ArrayList<String> mSpareChange = new ArrayList<String>();
+    private ArrayList<String> mWallet = new ArrayList<String>();
     private ArrayList<Object> selectedCoins = new ArrayList<Object>();
     private HashMap<String, Coin> coins = new HashMap<>();
 
@@ -49,7 +49,7 @@ public class SpareChangeSend extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_spare_change_send);
+        setContentView(R.layout.activity_wallet_send);
 
         Bundle bundle = getIntent().getExtras();
         friend = bundle.getString("friend");
@@ -61,7 +61,7 @@ public class SpareChangeSend extends AppCompatActivity {
         quid = settings.getString("quid", "");
         dolr = settings.getString("dolr", "");
 
-        listView = findViewById(R.id.sparechange);
+        listView = findViewById(R.id.walletSend);
 
         updateList();
 
@@ -85,7 +85,7 @@ public class SpareChangeSend extends AppCompatActivity {
         });
 
 
-        Button mSendCoins = findViewById(R.id.sendcoinsbutton);
+        Button mSendCoins = findViewById(R.id.sendcoinsbutton2);
         mSendCoins.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -95,7 +95,7 @@ public class SpareChangeSend extends AppCompatActivity {
         });
 
 
-        Button back = findViewById(R.id.back5);
+        Button back = findViewById(R.id.back6);
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -103,7 +103,7 @@ public class SpareChangeSend extends AppCompatActivity {
             }
         });
 
-        Button sendAll = findViewById(R.id.sendAll);
+        Button sendAll = findViewById(R.id.sendAll2);
         sendAll.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -151,7 +151,7 @@ public class SpareChangeSend extends AppCompatActivity {
             total = total + send;
             result = result + send;
 
-            db.collection("users").document(email).collection("Spare Change").document(coin.getId()).delete();
+            db.collection("users").document(email).collection("Wallet").document(coin.getId()).delete();
 
         }
         if ((gold != null) & (selectedCoins.size() > 0)) {
@@ -174,7 +174,7 @@ public class SpareChangeSend extends AppCompatActivity {
         Double dolrexchange = Double.parseDouble(dolr);
         Double penyexchange = Double.parseDouble(peny);
 
-        int size = mSpareChange.size();
+        int size = mWallet.size();
 
         db.collection("users").document(friend).addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
@@ -186,7 +186,7 @@ public class SpareChangeSend extends AppCompatActivity {
         Double result = gold;
 
         for (int i = 0; i < size; i++) {
-            Coin coin = coins.get(mSpareChange.get(i));
+            Coin coin = coins.get(mWallet.get(i));
 
             if (coin.getCurrency().equals("SHIL")) {
                 send = send + shilexchange * coin.getValue();
@@ -203,7 +203,7 @@ public class SpareChangeSend extends AppCompatActivity {
             total = total + send;
             result = result + send;
 
-            db.collection("users").document(email).collection("Spare Change").document(coin.getId()).delete();
+            db.collection("users").document(email).collection("Wallet").document(coin.getId()).delete();
 
         }
         if ((gold != null)) {
@@ -221,8 +221,8 @@ public class SpareChangeSend extends AppCompatActivity {
 
 
     private void updateList() {
-        mSpareChange.clear();
-        db.collection("users").document(email).collection("Spare Change").addSnapshotListener(new EventListener<QuerySnapshot>() {
+        mWallet.clear();
+        db.collection("users").document(email).collection("Wallet").addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
                 for (int i = 0; i < queryDocumentSnapshots.size(); i++) {
@@ -232,15 +232,15 @@ public class SpareChangeSend extends AppCompatActivity {
                     Double val = Double.parseDouble(value);
                     String id = queryDocumentSnapshots.getDocuments().get(i).getId();
                     Coin coin = new Coin(id, val, currency);
-                    mSpareChange.add(res);
+                    mWallet.add(res);
                     coins.put(res, coin);
                 }
                 HashSet hs = new HashSet();
-                hs.addAll(mSpareChange);
-                mSpareChange.clear();
-                mSpareChange.addAll(hs);
+                hs.addAll(mWallet);
+                mWallet.clear();
+                mWallet.addAll(hs);
 
-                ArrayAdapter arrayAdapter = new ArrayAdapter(com.example.s1658030.coinzj.SpareChangeSend.this, R.layout.my_layout, R.id.row_layout, mSpareChange);
+                ArrayAdapter arrayAdapter = new ArrayAdapter(com.example.s1658030.coinzj.WalletSend.this, R.layout.my_layout, R.id.row_layout, mWallet);
                 listView.setAdapter(arrayAdapter);
                 listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
             }
@@ -270,3 +270,4 @@ public class SpareChangeSend extends AppCompatActivity {
 
 
 }
+

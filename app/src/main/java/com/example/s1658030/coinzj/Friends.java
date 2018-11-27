@@ -166,7 +166,7 @@ public class Friends extends AppCompatActivity {
     }
 
     private void goToWalletSend(String friend) {
-        Intent intent = new Intent(this,SpareChangeSend.class);
+        Intent intent = new Intent(this,WalletSend.class);
         intent.putExtra("friend",friend);
         startActivity(intent);
     }
