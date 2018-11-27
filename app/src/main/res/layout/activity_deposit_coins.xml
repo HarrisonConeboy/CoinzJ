@@ -243,13 +243,13 @@
         android:textSize="30sp"
         android:textStyle="italic"
         app:layout_constraintBottom_toTopOf="@+id/changeText"
-        app:layout_constraintEnd_toStartOf="@+id/currentGold"
+        app:layout_constraintEnd_toStartOf="@+id/currentGold2"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/dolr" />
 
     <TextView
-        android:id="@+id/currentGold"
+        android:id="@+id/currentGold2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -260,21 +260,5 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/dolr"
         app:layout_constraintVertical_bias="0.454" />
-
-    <Button
-        android:id="@+id/showGold"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:text="Show"
-        android:textAllCaps="false"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@+id/changeText"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/curGold"
-        app:layout_constraintTop_toBottomOf="@+id/dolr" />
 
 </android.support.constraint.ConstraintLayout>

@@ -31,7 +31,8 @@
         <activity android:name=".DepositCoins" />
         <activity android:name=".Friends" />
         <activity android:name=".SpareChangeSend" />
-        <activity android:name=".WalletSend"></activity>
+        <activity android:name=".WalletSend" />
+        <activity android:name=".SendToSpareChange"></activity>
     </application>
 
 </manifest>

@@ -13,7 +13,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
@@ -47,6 +46,7 @@ public class DepositCoins extends AppCompatActivity {
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
     private String email = mAuth.getCurrentUser().getEmail();
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,6 +73,13 @@ public class DepositCoins extends AppCompatActivity {
 
         depositCoins();
         check = 1;
+
+        Bundle bundle = getIntent().getExtras();
+        String temp = bundle.getString("gold");
+        TextView currentGold = findViewById(R.id.currentGold2);
+        DecimalFormat df = new DecimalFormat("#.##");
+        Double temp2 = Double.parseDouble(temp);
+        currentGold.setText(String.valueOf(df.format(temp2)));
 
 
 
@@ -110,19 +117,9 @@ public class DepositCoins extends AppCompatActivity {
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                backToBank();
+                backToBankNoChange();
             }
         });
-
-        Button show = findViewById(R.id.showGold);
-        show.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                depositCoins();
-                show.setVisibility(View.GONE);
-            }
-        });
-
 
     }
 
@@ -146,12 +143,8 @@ public class DepositCoins extends AppCompatActivity {
                 }
             });
 
-            TextView currentGold = findViewById(R.id.currentGold);
-            DecimalFormat format = new DecimalFormat("#.##");
-            currentGold.setText(String.valueOf(format.format(gold)));
 
-
-            Double result = gold;
+            double result = gold;
 
             Double shilexchange = Double.parseDouble(shil);
             Double quidexchange = Double.parseDouble(quid);
@@ -186,7 +179,9 @@ public class DepositCoins extends AppCompatActivity {
                 g.put("Gold", result);
                 db.collection("users").document(email).set(g);
                 Toast.makeText(this, "Deposited: " + String.valueOf(total), Toast.LENGTH_SHORT).show();
-                backToBank();
+                Intent intent = new Intent(this, Bank.class);
+                intent.putExtra("gold",String.valueOf(result));
+                backToBank(intent);
             }
         }
     }
@@ -236,7 +231,9 @@ public class DepositCoins extends AppCompatActivity {
             g.put("Gold", result);
             db.collection("users").document(email).set(g);
             Toast.makeText(this, "Deposited: " + String.valueOf(total), Toast.LENGTH_SHORT).show();
-            backToBank();
+            Intent intent = new Intent(this, Bank.class);
+            intent.putExtra("gold",result);
+            backToBank(intent);
         }
     }
 
@@ -275,8 +272,15 @@ public class DepositCoins extends AppCompatActivity {
     }
 
 
-    private void backToBank() {
-        Intent intent = new Intent(this,Bank.class);
+    private void backToBank(Intent intent) {
+        startActivity(intent);
+    }
+
+    private void backToBankNoChange() {
+        Intent intent = new Intent(this, Bank.class);
+        Bundle bundle = getIntent().getExtras();
+        String temp = bundle.getString("gold");
+        intent.putExtra("gold",temp);
         startActivity(intent);
     }
 

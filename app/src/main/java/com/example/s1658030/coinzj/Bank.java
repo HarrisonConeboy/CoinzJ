@@ -3,38 +3,18 @@ package com.example.s1658030.coinzj;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.media.MediaDrm;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.AttributeSet;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.measurement.AppMeasurement;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.QuerySnapshot;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.annotation.Nullable;
+import java.text.DecimalFormat;
 
 public class Bank extends AppCompatActivity {
 
+    private String gold;
+    private Bundle bundle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +36,13 @@ public class Bank extends AppCompatActivity {
         mDolr.setText(dolr);
         mPeny.setText(peny);
 
+        bundle = getIntent().getExtras();
+        gold = bundle.getString("gold");
+
+        TextView currentGold = findViewById(R.id.currentGold2);
+        DecimalFormat df = new DecimalFormat("#.##");
+        Double gold2 = Double.parseDouble(gold);
+        currentGold.setText(String.valueOf(df.format(gold2)));
 
 
         Button mDeposit = findViewById(R.id.deposit);
@@ -76,16 +63,30 @@ public class Bank extends AppCompatActivity {
         });
 
 
+        Button mTransfer = findViewById(R.id.transferSomeCoins);
+        mTransfer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                goToSendToSpareChange();
+            }
+        });
 
     }
 
     private void toDeposit() {
         Intent intent = new Intent(this,DepositCoins.class);
+        intent.putExtras(bundle);
         startActivity(intent);
     }
 
     private void backToMenu() {
         Intent intent = new Intent(this,MainMenu.class);
+        startActivity(intent);
+    }
+
+    private void goToSendToSpareChange() {
+        Intent intent = new Intent(this, SendToSpareChange.class);
+        intent.putExtras(bundle);
         startActivity(intent);
     }
 

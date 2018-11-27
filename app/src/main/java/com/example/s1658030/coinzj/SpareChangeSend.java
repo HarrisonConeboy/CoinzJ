@@ -90,7 +90,6 @@ public class SpareChangeSend extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 sendCoins();
-                updateList();
             }
         });
 

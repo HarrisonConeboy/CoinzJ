@@ -54,6 +54,7 @@ public class MainMenu extends AppCompatActivity {
     private String quid;
     private String peny;
     private Intent svc;
+    private String gold;
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
@@ -68,6 +69,8 @@ public class MainMenu extends AppCompatActivity {
 
         svc = new Intent(this, BackgroundSoundService.class);
         svc.setAction("com.example.s1658030.coinzj.BackgroundSoundService");
+
+        getGold();
 
         music.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -101,7 +104,9 @@ public class MainMenu extends AppCompatActivity {
     }
 
     public void goToBank(View view) {
+        getGold();
         Intent intent = new Intent(this, Bank.class);
+        intent.putExtra("gold",gold);
         startActivity(intent);
     }
 
@@ -155,6 +160,15 @@ public class MainMenu extends AppCompatActivity {
         mAuth.signOut();
         stopService(svc);
         startActivity(new Intent(MainMenu.this, SignIn.class));
+    }
+
+    private void getGold() {
+        db.collection("users").document(email).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
+                gold = String.valueOf(documentSnapshot.getDouble("Gold"));
+            }
+        });
     }
 
     @Override

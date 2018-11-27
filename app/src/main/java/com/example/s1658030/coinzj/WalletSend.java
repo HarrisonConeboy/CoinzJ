@@ -90,7 +90,6 @@ public class WalletSend extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 sendCoins();
-                updateList();
             }
         });
 
