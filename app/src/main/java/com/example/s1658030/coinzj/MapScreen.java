@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -17,7 +18,11 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.mapbox.android.core.location.LocationEngine;
 import com.mapbox.android.core.location.LocationEngineListener;
 import com.mapbox.android.core.location.LocationEnginePriority;
@@ -45,6 +50,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
         LocationEngineListener, PermissionsListener {
 
@@ -61,6 +68,7 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
     private String preferencesFile = "MyPrefsFiles";
 
     private HashMap<String,Coin> coins = new HashMap<String,Coin>();
+    private TextView mWallet;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +84,7 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
 
         Bundle bundle = getIntent().getExtras();
         mapData = bundle.getString("mapData");
+        mWallet = findViewById(R.id.numberInWallet);
     }
 
     @Override
@@ -97,6 +106,7 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
             for (Feature f : features) {
                 if (f.geometry() instanceof Point) {
 
+                    //Set important variables
                     String id = f.properties().get("id").getAsString();
                     Double value = f.properties().get("value").getAsDouble();
                     String currency = f.properties().get("currency").getAsString();
@@ -105,28 +115,50 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
                     FirebaseUser user = mAuth.getCurrentUser();
                     String email = user.getEmail();
 
-                    String symbol = f.properties().get("marker-symbol").getAsString();
-                    LatLng latLng = new LatLng((((Point) f.geometry()).latitude()),
-                            (((Point) f.geometry()).longitude()));
-                    //Create the new coin
-                    Coin tempCoin = new Coin(id,value,currency);
+                    //Check to see if coin has been collected, if it hasn't then add it to the map
+                    db.collection("users").document(email)
+                            .collection("Collected").document(id)
+                            .addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                        @Override
+                        public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
+                            if (!documentSnapshot.exists()) {
+                                String symbol = f.properties().get("marker-symbol").getAsString();
+                                LatLng latLng = new LatLng((((Point) f.geometry()).latitude()),
+                                        (((Point) f.geometry()).longitude()));
+                                //Create the new coin
+                                Coin tempCoin = new Coin(id,value,currency);
 
-                    //Update hashmap
-                    coins.put(id,tempCoin);
+                                //Update hashmap
+                                coins.put(id,tempCoin);
 
-                    //Determine which marker to use
-                    String key = currency + symbol;
-                    Integer res = markerIcons.masterKey.get(key);
-                    Icon icon = iconFactory.fromResource(res);
+                                //Determine which marker to use
+                                String key = currency + symbol;
+                                Integer res = markerIcons.masterKey.get(key);
+                                Icon icon = iconFactory.fromResource(res);
 
-                    //Placing marker on the map with relevant information
-                    String title = symbol + "-" + currency;
-                    map.addMarker(new MarkerOptions().title(title).snippet(id)
-                            .position(latLng).icon(icon));
+                                //Placing marker on the map with relevant information
+                                String title = symbol + "-" + currency;
+                                map.addMarker(new MarkerOptions().title(title).snippet(id)
+                                        .position(latLng).icon(icon));
+                            }
+                        }
+                    });
                     }
                 }
 
             enableLocation();
+            FirebaseAuth mAuth = FirebaseAuth.getInstance();
+            String email = mAuth.getCurrentUser().getEmail();
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("users").document(email).collection("Wallet")
+                    .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                @Override
+                public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                    Integer number = queryDocumentSnapshots.size();
+                    mWallet.setText(number.toString());
+                }
+            });
+
         }
     }
 
@@ -215,10 +247,10 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
 
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             for (Marker m : map.getMarkers()) {
-                if      (((location.getLatitude() <= m.getPosition().getLatitude()+ 0.00019) &&
-                        (location.getLatitude() >= m.getPosition().getLatitude() - 0.00019) &&
-                        ((location.getLongitude() <= m.getPosition().getLongitude()+ 0.00019) &&
-                                (location.getLongitude() >= m.getPosition().getLongitude() - 0.00019)))) {
+                if      (((location.getLatitude() <= m.getPosition().getLatitude()+ 0.0005) &&
+                        (location.getLatitude() >= m.getPosition().getLatitude() - 0.0005) &&
+                        ((location.getLongitude() <= m.getPosition().getLongitude()+ 0.0005) &&
+                                (location.getLongitude() >= m.getPosition().getLongitude() - 0.0005)))) {
 
                     FirebaseAuth mAuth = FirebaseAuth.getInstance();
                     FirebaseUser user = mAuth.getCurrentUser();
@@ -231,19 +263,16 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
                     coin.put("currency",currency);
                     String email = user.getEmail();
 
-                    db.collection("users").document(email).collection("Wallet").document(id).set(coin)
-                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void aVoid) {
-                                    Toast.makeText(MapScreen.this, "Collected " + m.getTitle(), Toast.LENGTH_SHORT).show();
-                                }
-                            })
-                            .addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    Toast.makeText(MapScreen.this, "Failed to update Wallet", Toast.LENGTH_SHORT).show();
-                                }
-                            });
+                    db.collection("users").document(email).collection("Wallet").addSnapshotListener(new EventListener<QuerySnapshot>() {
+                        @Override
+                        public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                            if (queryDocumentSnapshots.size() >= 50) {
+                                db.collection("users").document(email).collection("Spare Change").document(id).set(coin);
+                            } else {
+                                db.collection("users").document(email).collection("Wallet").document(id).set(coin);
+                            }
+                        }
+                    });
 
                     db.collection("users").document(email)
                             .collection("Collected").document(id).set(coin);
@@ -251,6 +280,17 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
                     removing(m);
                 }
             }
+
+            FirebaseAuth mAuth = FirebaseAuth.getInstance();
+            String email = mAuth.getCurrentUser().getEmail();
+            db.collection("users").document(email).collection("Wallet")
+                    .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                        @Override
+                        public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                            Integer number = queryDocumentSnapshots.size();
+                            mWallet.setText(number.toString());
+                        }
+                    });
         }
     }
 
@@ -290,8 +330,6 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
         if (locationLayerPlugin != null) {
             locationLayerPlugin.onStop();
         }
-        SharedPreferences settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = settings.edit();
     }
 
     @Override

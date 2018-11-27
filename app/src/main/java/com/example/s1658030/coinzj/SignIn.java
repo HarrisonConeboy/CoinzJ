@@ -14,6 +14,10 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SignIn extends AppCompatActivity {
 
@@ -85,6 +89,11 @@ public class SignIn extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             FirebaseUser user = mAuth.getCurrentUser();
                             if (user != null) {
+                                String email = user.getEmail();
+                                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                                HashMap<String,Object> nothing = new HashMap<>();
+                                nothing.put("Gold",0);
+                                db.collection("users").document(email).set(nothing);
                                 startActivity(new Intent(SignIn.this,MainMenu.class));
                             }
                         } else {
