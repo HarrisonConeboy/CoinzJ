@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/moneysloth2"
-    tools:context=".DepositCoins">
+    tools:context=".Gambling">
 
     <TextView
         android:id="@+id/shil"
@@ -144,7 +144,7 @@
         app:layout_constraintVertical_bias="0.0" />
 
     <Button
-        android:id="@+id/back2"
+        android:id="@+id/back3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -160,14 +160,14 @@
         app:layout_constraintVertical_bias="1.0" />
 
     <Button
-        android:id="@+id/depositCoins"
+        android:id="@+id/gambleCoins"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:text="Deposit Coins"
+        android:text="Gamble Coins"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -186,14 +186,14 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:padding="10dp"
-        app:layout_constraintBottom_toTopOf="@+id/depositCoins"
+        app:layout_constraintBottom_toTopOf="@+id/gambleCoins"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/dm"
         tools:context=".MainActivity">
 
         <ListView
-            android:id="@+id/walletInDeposit"
+            android:id="@+id/walletInGamble"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </RelativeLayout>
@@ -215,7 +215,7 @@
         app:layout_constraintTop_toBottomOf="@+id/dolr" />
 
     <TextView
-        android:id="@+id/curGold"
+        android:id="@+id/curGold5"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -227,13 +227,13 @@
         android:textSize="30sp"
         android:textStyle="italic"
         app:layout_constraintBottom_toTopOf="@+id/dm"
-        app:layout_constraintEnd_toStartOf="@+id/currentGold3"
+        app:layout_constraintEnd_toStartOf="@+id/currentGold5"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/dolr" />
 
     <TextView
-        android:id="@+id/currentGold3"
+        android:id="@+id/currentGold5"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"

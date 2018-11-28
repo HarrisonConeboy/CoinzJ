@@ -1,6 +1,9 @@
 package com.example.s1658030.coinzj;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
@@ -25,12 +28,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 
 import javax.annotation.Nullable;
 
-public class DepositCoins extends AppCompatActivity {
-
-    private Bundle bundle;
+public class Gambling extends AppCompatActivity {
 
     private String shil;
     private String quid;
@@ -41,7 +43,7 @@ public class DepositCoins extends AppCompatActivity {
     private Integer check = 0;
     private ListView listView;
     private ArrayList<String> mWallet = new ArrayList<String>(50);
-    private ArrayList<Object> walletList = new ArrayList<Object>();
+    private ArrayList<Object> selectedCoins = new ArrayList<Object>();
     private HashMap<String, Coin> coins = new HashMap<>();
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -52,11 +54,9 @@ public class DepositCoins extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_deposit_coins);
+        setContentView(R.layout.activity_gambling);
 
-        bundle = getIntent().getExtras();
-
-        listView = findViewById(R.id.walletInDeposit);
+        listView = findViewById(R.id.walletInGamble);
 
         SharedPreferences settings = getSharedPreferences("MyPrefsFile", Context.MODE_PRIVATE);
         TextView mShil = findViewById(R.id.shilValue);
@@ -75,12 +75,12 @@ public class DepositCoins extends AppCompatActivity {
 
         updateList();
 
-        depositCoins();
+        gambleCoins();
         check = 1;
 
         Bundle bundle = getIntent().getExtras();
         String temp = bundle.getString("gold");
-        TextView currentGold = findViewById(R.id.currentGold3);
+        TextView currentGold = findViewById(R.id.currentGold5);
         DecimalFormat df = new DecimalFormat("#.##");
         Double temp2 = Double.parseDouble(temp);
         currentGold.setText(String.valueOf(df.format(temp2)));
@@ -90,26 +90,31 @@ public class DepositCoins extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (walletList.contains(parent.getItemAtPosition(position))) {
-                    walletList.remove(parent.getItemAtPosition(position));
+                if (selectedCoins.contains(parent.getItemAtPosition(position))) {
+                    selectedCoins.remove(parent.getItemAtPosition(position));
                 } else {
-                    walletList.add(parent.getItemAtPosition(position));
+                    selectedCoins.add(parent.getItemAtPosition(position));
                 }
             }
         });
 
 
-        Button mDeposit = findViewById(R.id.depositCoins);
+        Button mDeposit = findViewById(R.id.gambleCoins);
         mDeposit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                depositCoins();
+                Dialog dialog = onCreateDialog(null);
+                if (selectedCoins.size() == 0) {
+                    Toast.makeText(Gambling.this, "Please select some coins", Toast.LENGTH_SHORT).show();
+                } else {
+                    dialog.show();
+                }
             }
         });
 
 
 
-        Button back = findViewById(R.id.back2);
+        Button back = findViewById(R.id.back3);
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -120,7 +125,7 @@ public class DepositCoins extends AppCompatActivity {
     }
 
 
-    private void depositCoins() {
+    private void gambleCoins() {
         if (check == 0) {
             db.collection("users").document(email).addSnapshotListener(new EventListener<DocumentSnapshot>() {
                 @Override
@@ -147,10 +152,10 @@ public class DepositCoins extends AppCompatActivity {
             Double dolrexchange = Double.parseDouble(dolr);
             Double penyexchange = Double.parseDouble(peny);
 
-            int size = walletList.size();
+            int size = selectedCoins.size();
 
             for (int i = 0; i < size; i++) {
-                Coin coin = coins.get(walletList.get(i));
+                Coin coin = coins.get(selectedCoins.get(i));
 
                 if (coin.getCurrency().equals("SHIL")) {
                     add = add + shilexchange * coin.getValue();
@@ -165,16 +170,23 @@ public class DepositCoins extends AppCompatActivity {
 
                 if (gold != null) {
                     db.collection("users").document(email).collection("Wallet").document(coin.getId()).delete();
-                    result = result + add;
-                    total = total + add;
+                    Random r = new Random();
+                    int low = 0;
+                    int high = 100;
+                    int rand = r.nextInt(high-low) + low;
+
+                    if(rand <= 32) {
+                        result = result + add*2;
+                        total = total + add*2;
+                    }
+
                 }
             }
 
-            if ((gold != null) & (walletList.size() > 0)) {
+            if ((gold != null) & (selectedCoins.size() > 0)) {
                 Map<String, Object> g = new HashMap<>();
                 g.put("Gold", result);
                 db.collection("users").document(email).set(g);
-                Toast.makeText(this, "Deposited: " + String.valueOf(total), Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(this, Bank.class);
                 intent.putExtra("gold",String.valueOf(result));
                 intent.putExtra("winnings",String.valueOf(total));
@@ -182,6 +194,9 @@ public class DepositCoins extends AppCompatActivity {
             }
         }
     }
+
+
+
 
 
     private void updateList() {
@@ -205,11 +220,30 @@ public class DepositCoins extends AppCompatActivity {
                 mWallet.clear();
                 mWallet.addAll(hs);
 
-                ArrayAdapter arrayAdapter = new ArrayAdapter(com.example.s1658030.coinzj.DepositCoins.this, R.layout.my_layout, R.id.row_layout, mWallet);
+                ArrayAdapter arrayAdapter = new ArrayAdapter(com.example.s1658030.coinzj.Gambling.this, R.layout.my_layout, R.id.row_layout, mWallet);
                 listView.setAdapter(arrayAdapter);
                 listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
             }
         });
+    }
+
+
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        String message = "Are you sure? \nYou have a 33% chance of doubling value";
+        String yes = "Yes";
+        String cancel = "Cancel";
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(message)
+                .setPositiveButton(yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        gambleCoins();
+                    }
+                })
+                .setNegativeButton(cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                    }
+                });
+        return builder.create();
     }
 
 
@@ -224,6 +258,7 @@ public class DepositCoins extends AppCompatActivity {
 
     private void backToBankNoChange() {
         Intent intent = new Intent(this, Bank.class);
+        Bundle bundle = getIntent().getExtras();
         intent.putExtras(bundle);
         startActivity(intent);
     }
@@ -238,7 +273,4 @@ public class DepositCoins extends AppCompatActivity {
         super.onDestroy();
     }
 
-
 }
-
-

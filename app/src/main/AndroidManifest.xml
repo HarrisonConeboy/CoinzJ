@@ -32,7 +32,8 @@
         <activity android:name=".Friends" />
         <activity android:name=".SpareChangeSend" />
         <activity android:name=".WalletSend" />
-        <activity android:name=".SendToSpareChange"></activity>
+        <activity android:name=".SendToSpareChange" />
+        <activity android:name=".Gambling" />
     </application>
 
 </manifest>

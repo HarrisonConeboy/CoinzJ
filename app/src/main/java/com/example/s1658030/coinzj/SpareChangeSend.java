@@ -10,7 +10,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -94,7 +93,7 @@ public class SpareChangeSend extends AppCompatActivity {
         });
 
 
-        Button back = findViewById(R.id.back5);
+        Button back = findViewById(R.id.back2);
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

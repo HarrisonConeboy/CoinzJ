@@ -169,6 +169,8 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
 
     public void goBank(View view) {
         Intent intent = new Intent(this, Bank.class);
+        Bundle bundle = getIntent().getExtras();
+        intent.putExtras(bundle);
         startActivity(intent);
     }
 

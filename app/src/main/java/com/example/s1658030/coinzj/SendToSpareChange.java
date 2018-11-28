@@ -128,9 +128,9 @@ public class SendToSpareChange extends AppCompatActivity {
             temp.put("value",value);
             temp.put("currency",currency);
 
+            db.collection("users").document(email).collection("Wallet").document(coin.getId()).delete();
             db.collection("users").document(email).collection("Spare Change").document(coin.getId()).set(temp);
 
-            db.collection("users").document(email).collection("Wallet").document(coin.getId()).delete();
 
         }
 

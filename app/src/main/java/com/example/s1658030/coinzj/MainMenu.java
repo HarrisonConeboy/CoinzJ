@@ -100,6 +100,8 @@ public class MainMenu extends AppCompatActivity {
     public void goToMap(View view){
         Intent intent = new Intent(this, MapScreen.class);
         intent.putExtra("mapData",mapData);
+        intent.putExtra("gold",gold);
+        intent.putExtra("winnings","0");
         startActivity(intent);
     }
 
@@ -107,6 +109,8 @@ public class MainMenu extends AppCompatActivity {
         getGold();
         Intent intent = new Intent(this, Bank.class);
         intent.putExtra("gold",gold);
+        intent.putExtra("winnings","0");
+
         startActivity(intent);
     }
 

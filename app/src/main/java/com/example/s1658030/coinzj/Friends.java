@@ -51,7 +51,7 @@ public class Friends extends AppCompatActivity {
 
         updateFriendsList();
 
-        Button mainMenu = findViewById(R.id.back5);
+        Button mainMenu = findViewById(R.id.back2);
         mainMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -135,6 +135,7 @@ public class Friends extends AppCompatActivity {
                 Toast.makeText(this, "You cannot add yourself", Toast.LENGTH_SHORT).show();
                 mFriendUsername.setText("");
             } else {
+                Toast.makeText(Friends.this, "Friend added", Toast.LENGTH_SHORT).show();
                 db.collection("users").document(friendUsername).addSnapshotListener(new EventListener<DocumentSnapshot>() {
                     @Override
                     public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
@@ -142,7 +143,6 @@ public class Friends extends AppCompatActivity {
                             db.collection("users").document(email).collection("Friends").document(friendUsername).set(friend).addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void aVoid) {
-                                    Toast.makeText(Friends.this, "Friend added", Toast.LENGTH_SHORT).show();
                                     mFriendUsername.setText("");
                                 }
                             }).addOnFailureListener(new OnFailureListener() {
