@@ -7,11 +7,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import java.text.DecimalFormat;
 
 public class Bank extends AppCompatActivity {
 
-    private String gold;
     private Bundle bundle;
 
     @Override
@@ -20,8 +21,9 @@ public class Bank extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bank);
 
+
         bundle = getIntent().getExtras();
-        gold = bundle.getString("gold");
+        String gold = bundle.getString("gold");
         String winnings = bundle.getString("winnings");
 
         TextView currentGold = findViewById(R.id.currentGold3);

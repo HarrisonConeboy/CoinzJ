@@ -94,6 +94,7 @@ public class SignIn extends AppCompatActivity {
                                 HashMap<String,Object> nothing = new HashMap<>();
                                 nothing.put("Gold",0);
                                 db.collection("users").document(email).set(nothing);
+                                db.collection("users").document(email).collection("RecentDate").document().set(nothing);
                                 startActivity(new Intent(SignIn.this,MainMenu.class));
                             }
                         } else {

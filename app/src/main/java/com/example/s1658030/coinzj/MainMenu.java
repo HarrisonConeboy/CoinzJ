@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
@@ -26,6 +27,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import org.json.JSONException;
@@ -60,6 +62,8 @@ public class MainMenu extends AppCompatActivity {
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
     private String email = mAuth.getCurrentUser().getEmail();
 
+    private ListenerRegistration listener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,6 +73,7 @@ public class MainMenu extends AppCompatActivity {
 
         svc = new Intent(this, BackgroundSoundService.class);
         svc.setAction("com.example.s1658030.coinzj.BackgroundSoundService");
+
 
         getGold();
 
@@ -95,6 +100,14 @@ public class MainMenu extends AppCompatActivity {
             }
         });
 
+        ImageButton help = findViewById(R.id.helpIcon);
+        help.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                goToHelp();
+            }
+        });
+
     }
 
     public void goToMap(View view){
@@ -116,6 +129,11 @@ public class MainMenu extends AppCompatActivity {
 
     public void goToFriends() {
         Intent intent = new Intent(this, Friends.class);
+        startActivity(intent);
+    }
+
+    private void goToHelp() {
+        Intent intent = new Intent(this, HelpPage.class);
         startActivity(intent);
     }
 
@@ -167,17 +185,29 @@ public class MainMenu extends AppCompatActivity {
     }
 
     private void getGold() {
-        db.collection("users").document(email).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+        db.collection("users").document(email).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
-            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
                 gold = String.valueOf(documentSnapshot.getDouble("Gold"));
             }
-        });
+        })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(MainMenu.this, "Failed to retrieve gold",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     @Override
     public void onStop() {
         super.onStop();
+
+        if (listener != null) {
+            listener.remove();
+        }
 
         SharedPreferences settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = settings.edit();

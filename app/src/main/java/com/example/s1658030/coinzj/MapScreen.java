@@ -22,6 +22,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.mapbox.android.core.location.LocationEngine;
 import com.mapbox.android.core.location.LocationEngineListener;
@@ -67,6 +68,10 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
     private MarkerOptions markerOptions;
     private String preferencesFile = "MyPrefsFiles";
 
+    FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    String email = mAuth.getCurrentUser().getEmail();
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+
     private HashMap<String,Coin> coins = new HashMap<String,Coin>();
     private TextView mWallet;
 
@@ -103,6 +108,7 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
             IconFactory iconFactory = IconFactory.getInstance(MapScreen.this);
             MarkerIcons markerIcons = new MarkerIcons();
 
+            //Iterate over all of the features and create map markers for each
             for (Feature f : features) {
                 if (f.geometry() instanceof Point) {
 
@@ -110,54 +116,72 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
                     String id = f.properties().get("id").getAsString();
                     Double value = f.properties().get("value").getAsDouble();
                     String currency = f.properties().get("currency").getAsString();
-                    FirebaseFirestore db = FirebaseFirestore.getInstance();
-                    FirebaseAuth mAuth = FirebaseAuth.getInstance();
-                    FirebaseUser user = mAuth.getCurrentUser();
-                    String email = user.getEmail();
+
 
                     //Check to see if coin has been collected, if it hasn't then add it to the map
-                    db.collection("users").document(email)
-                            .collection("Collected").document(id)
-                            .addSnapshotListener(new EventListener<DocumentSnapshot>() {
-                        @Override
-                        public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                            if (!documentSnapshot.exists()) {
-                                String symbol = f.properties().get("marker-symbol").getAsString();
-                                LatLng latLng = new LatLng((((Point) f.geometry()).latitude()),
-                                        (((Point) f.geometry()).longitude()));
-                                //Create the new coin
-                                Coin tempCoin = new Coin(id,value,currency);
+                    db.collection("users")
+                            .document(email).collection("Collected").document(id).get()
+                            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                @Override
+                                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                    //First we check to see if the coin has been collected
+                                    if (!documentSnapshot.exists()) {
 
-                                //Update hashmap
-                                coins.put(id,tempCoin);
+                                        //If it has not been collected then we update the map
+                                        String symbol = f.properties()
+                                                .get("marker-symbol").getAsString();
+                                        LatLng latLng = new LatLng((((Point) f.geometry()).latitude()),
+                                                (((Point) f.geometry()).longitude()));
 
-                                //Determine which marker to use
-                                String key = currency + symbol;
-                                Integer res = markerIcons.masterKey.get(key);
-                                Icon icon = iconFactory.fromResource(res);
+                                        //Create the new coin
+                                        Coin tempCoin = new Coin(id,value,currency);
 
-                                //Placing marker on the map with relevant information
-                                String title = symbol + "-" + currency;
-                                map.addMarker(new MarkerOptions().title(title).snippet(id)
-                                        .position(latLng).icon(icon));
-                            }
-                        }
-                    });
-                    }
+                                        //Update hashmap
+                                        coins.put(id,tempCoin);
+
+                                        //Determine which marker to use
+                                        String key = currency + symbol;
+                                        Integer res = markerIcons.masterKey.get(key);
+                                        Icon icon = iconFactory.fromResource(res);
+
+                                        //Placing marker on the map with relevant information
+                                        String title = symbol + "-" + currency;
+                                        map.addMarker(new MarkerOptions().title(title).snippet(id)
+                                                .position(latLng).icon(icon));
+                                    }
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Toast.makeText(MapScreen.this,
+                                            "Unable to update map", Toast.LENGTH_SHORT).show();
+                                }
+                            });
                 }
+
+
+            }
+
 
             enableLocation();
-            FirebaseAuth mAuth = FirebaseAuth.getInstance();
-            String email = mAuth.getCurrentUser().getEmail();
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection("users").document(email).collection("Wallet")
-                    .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                @Override
-                public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                    Integer number = queryDocumentSnapshots.size();
-                    mWallet.setText(number.toString());
-                }
-            });
+
+            //Display initially how many coins are in the Wallet
+            db.collection("users")
+                    .document(email).collection("Wallet").get()
+                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                        @Override
+                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                            mWallet.setText(String.valueOf(queryDocumentSnapshots.size()));
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(MapScreen.this, "Failed to get Wallet size",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
 
         }
     }
@@ -171,6 +195,7 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
         Intent intent = new Intent(this, Bank.class);
         Bundle bundle = getIntent().getExtras();
         intent.putExtras(bundle);
+
         startActivity(intent);
     }
 
@@ -247,55 +272,77 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
             FeatureCollection featureCollection = FeatureCollection.fromJson(mapData);
             List<Feature> features = featureCollection.features();
 
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
             for (Marker m : map.getMarkers()) {
-                if      (((location.getLatitude() <= m.getPosition().getLatitude()+ 0.0005) &&
-                        (location.getLatitude() >= m.getPosition().getLatitude() - 0.0005) &&
-                        ((location.getLongitude() <= m.getPosition().getLongitude()+ 0.0005) &&
-                                (location.getLongitude() >= m.getPosition().getLongitude() - 0.0005)))) {
+                if      (((location.getLatitude() <= m.getPosition().getLatitude()+ 0.00025) &&
+                        (location.getLatitude() >= m.getPosition().getLatitude() - 0.00025) &&
+                        ((location.getLongitude() <= m.getPosition().getLongitude()+ 0.00025) &&
+                                (location.getLongitude() >= m.getPosition().getLongitude() - 0.00025)))) {
 
-                    FirebaseAuth mAuth = FirebaseAuth.getInstance();
-                    FirebaseUser user = mAuth.getCurrentUser();
+
+                    //Create Map object to store in database
                     Map<String,Object> coin = new HashMap<>();
 
+                    //Get relevant information and set it in the map
                     String id = m.getSnippet();
                     Double value = coins.get(id).getValue();
                     String currency = coins.get(id).getCurrency();
                     coin.put("value",value);
                     coin.put("currency",currency);
-                    String email = user.getEmail();
 
-                    db.collection("users").document(email).collection("Wallet").addSnapshotListener(new EventListener<QuerySnapshot>() {
+
+                    //Update Wallet or Spare Change when coin collected
+                    db.collection("users")
+                            .document(email).collection("Wallet").get()
+                            .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                         @Override
-                        public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                            if (queryDocumentSnapshots.size() >= 50) {
-                                db.collection("users").document(email).collection("Spare Change").document(id).set(coin);
+                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                            if(queryDocumentSnapshots.size() <= 50) {
+                                updateWallet(coin, id);
                             } else {
-                                db.collection("users").document(email).collection("Wallet").document(id).set(coin);
+                                updateSpareChange(coin, id);
                             }
+                        }
+                    })
+                            .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(MapScreen.this, "Failed to retrieve Wallet",
+                                    Toast.LENGTH_SHORT).show();
                         }
                     });
 
+
+                    //Add coin to collected section, to keep track of those all picked up
                     db.collection("users").document(email)
                             .collection("Collected").document(id).set(coin);
 
+                    //Remove the marker from the map and play sound
                     removing(m);
                 }
             }
 
-            FirebaseAuth mAuth = FirebaseAuth.getInstance();
-            String email = mAuth.getCurrentUser().getEmail();
-            db.collection("users").document(email).collection("Wallet")
-                    .addSnapshotListener(new EventListener<QuerySnapshot>() {
+
+            //Update and display the number of coins in the Wallet
+            db.collection("users")
+                    .document(email).collection("Wallet").get()
+                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                         @Override
-                        public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                            Integer number = queryDocumentSnapshots.size();
-                            mWallet.setText(number.toString());
+                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                            mWallet.setText(String.valueOf(queryDocumentSnapshots.size()));
                         }
-                    });
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(MapScreen.this, "Failed to get Wallet size",
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
+
         }
     }
 
+    //Remove marker m and play noise
     private void removing(Marker m) {
         //Make ding noise
         MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.coinding);
@@ -304,10 +351,35 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
         map.removeMarker(m);
     }
 
+
+    //Update the Wallet with coin and ID
+    private void updateWallet(Map coin, String id) {
+
+        Toast.makeText(this, "Collected " + coin.get("currency")
+                + ": " + coin.get("value"), Toast.LENGTH_SHORT).show();
+
+        db.collection("users")
+                .document(email).collection("Wallet").document(id).set(coin);
+    }
+
+
+    //Update Spare Change with coin and ID
+    private void updateSpareChange(Map coin, String id) {
+        Toast.makeText(this, "Collected " + coin.get("currency")
+                + ": " + coin.get("value"), Toast.LENGTH_SHORT).show();
+
+        db.collection("users")
+                .document(email).collection("Spare Change").document(id).set(coin);
+    }
+
+
+    //Must be overridden or android studio unhappy
     @Override
     public void onExplanationNeeded(List<String> permissionsToExplain) {
     }
 
+
+    //Enable location if permissions granted
     @Override
     public void onPermissionResult(boolean granted) {
         if (granted) {
@@ -317,6 +389,8 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
         }
     }
 
+
+    //Start mapView
     @Override
     protected void onStart() {
         super.onStart();
@@ -326,6 +400,7 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
     @Override
     protected void onStop() {
         super.onStop();
+
         if (locationEngine != null) {
             locationEngine.removeLocationUpdates();
         }

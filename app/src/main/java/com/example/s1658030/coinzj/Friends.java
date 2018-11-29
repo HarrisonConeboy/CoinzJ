@@ -1,5 +1,6 @@
 package com.example.s1658030.coinzj;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -9,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -39,6 +41,8 @@ public class Friends extends AppCompatActivity {
 
     private ListView listView;
     private ArrayList<String> allFriends = new ArrayList<>();
+
+    private ArrayAdapter arrayAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,25 +107,35 @@ public class Friends extends AppCompatActivity {
         return builder.create();
     }
 
+
     private void updateFriendsList() {
         allFriends.clear();
-        db.collection("users").document(email).collection("Friends").addSnapshotListener(new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                for (int i = 0; i < queryDocumentSnapshots.size(); i++) {
-                    String friend = queryDocumentSnapshots.getDocuments().get(i).getId();
-                    allFriends.add(friend);
-                }
+        db.collection("users").document(email).collection("Friends").get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        for (int i = 0; i < queryDocumentSnapshots.size(); i++) {
+                            String friend = queryDocumentSnapshots.getDocuments().get(i).getId();
+                            allFriends.add(friend);
+                        }
 
-                HashSet hs = new HashSet();
-                hs.addAll(allFriends);
-                allFriends.clear();
-                allFriends.addAll(hs);
+                        HashSet hs = new HashSet();
+                        hs.addAll(allFriends);
+                        allFriends.clear();
+                        allFriends.addAll(hs);
 
-                ArrayAdapter arrayAdapter = new ArrayAdapter(com.example.s1658030.coinzj.Friends.this, android.R.layout.simple_list_item_1, allFriends);
-                listView.setAdapter(arrayAdapter);
-            }
-        });
+                        arrayAdapter = new ArrayAdapter(com.example.s1658030.coinzj.
+                                Friends.this, android.R.layout.simple_list_item_1, allFriends);
+                        listView.setAdapter(arrayAdapter);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(Friends.this, "Failed to update Friends",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void addFriend() {
@@ -132,33 +146,50 @@ public class Friends extends AppCompatActivity {
             friend.put(friendUsername,"I LOVE THIS FRIEND");
 
             if(friendUsername.equals(email)) {
-                Toast.makeText(this, "You cannot add yourself", Toast.LENGTH_SHORT).show();
+
+                Toast.makeText(this, "You cannot add yourself",
+                        Toast.LENGTH_SHORT).show();
+
                 mFriendUsername.setText("");
-            } else {
-                Toast.makeText(Friends.this, "Friend added", Toast.LENGTH_SHORT).show();
-                db.collection("users").document(friendUsername).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-                    @Override
-                    public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                        if (documentSnapshot.exists()) {
-                            db.collection("users").document(email).collection("Friends").document(friendUsername).set(friend).addOnSuccessListener(new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void aVoid) {
-                                    mFriendUsername.setText("");
-                                }
-                            }).addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    Toast.makeText(Friends.this, "Failed", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                        } else {
-                            Toast.makeText(Friends.this, "Friend does not exist", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
             }
-        } else {
-            Toast.makeText(this, "Please enter friend email", Toast.LENGTH_SHORT).show();
+            else {
+
+                db.collection("users").document(friendUsername).get()
+                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                            @Override
+                            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                if (documentSnapshot.exists()) {
+
+                                    Toast.makeText(Friends.this, "Friend added",
+                                            Toast.LENGTH_SHORT).show();
+
+                                    db.collection("users").document(email)
+                                            .collection("Friends")
+                                            .document(friendUsername).set(friend);
+
+                                    mFriendUsername.setText("");
+
+                                    updateFriendsList();
+                                }
+                                else {
+                                    Toast.makeText(Friends.this, "Friend " +
+                                            "does not exist", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(Friends.this, "Error getting friend",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+            }
+        }
+        else {
+            Toast.makeText(this, "Please enter friend email",
+                    Toast.LENGTH_SHORT).show();
         }
 
     }

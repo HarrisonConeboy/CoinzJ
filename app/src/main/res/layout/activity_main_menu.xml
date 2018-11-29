@@ -78,12 +78,30 @@
         android:layout_height="52dp"
         android:layout_marginBottom="4dp"
         android:layout_marginStart="4dp"
-        android:backgroundTint="@color/mapbox_blue"
+        android:backgroundTint="@android:color/holo_purple"
         android:text="Friends"
         android:textColor="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <ImageButton
+        android:id="@+id/helpIcon"
+        android:layout_width="64dp"
+        android:layout_height="63dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:background="#0000"
+        android:scaleType="fitXY"
+        android:tint="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"
+        app:srcCompat="@drawable/infoimage" />
 
 
 </android.support.constraint.ConstraintLayout>

@@ -23,7 +23,7 @@
         android:layout_height="47dp"
         android:backgroundTint="@color/mapbox_blue"
         android:onClick="goBank"
-        android:text="To Bank"
+        android:text="To Hub"
         android:textColor="@android:color/white"
         mapbox:layout_constraintBottom_toBottomOf="parent"
         mapbox:layout_constraintEnd_toEndOf="parent" />

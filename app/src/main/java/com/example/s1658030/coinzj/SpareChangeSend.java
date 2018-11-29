@@ -3,6 +3,7 @@ package com.example.s1658030.coinzj;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -12,6 +13,8 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
@@ -19,6 +22,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,8 +46,8 @@ public class SpareChangeSend extends AppCompatActivity {
     private String peny;
     private String dolr;
     private Double send;
-
     private Double gold;
+    private ArrayAdapter arrayAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,12 +68,20 @@ public class SpareChangeSend extends AppCompatActivity {
 
         updateList();
 
-        db.collection("users").document(friend).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                gold = documentSnapshot.getDouble("Gold");
-            }
-        });
+        db.collection("users").document(friend).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        gold = documentSnapshot.getDouble("Gold");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(SpareChangeSend.this, "Failed to retrieve gold",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
 
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -122,16 +134,25 @@ public class SpareChangeSend extends AppCompatActivity {
 
         int size = selectedCoins.size();
 
-        db.collection("users").document(friend).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                gold = documentSnapshot.getDouble("Gold");
-            }
-        });
+        db.collection("users").document(friend).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        gold = documentSnapshot.getDouble("Gold");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(SpareChangeSend.this, "Failed to retrieve gold",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
 
         Double result = gold;
 
         for (int i = 0; i < size; i++) {
+
             Coin coin = coins.get(selectedCoins.get(i));
 
             if (coin.getCurrency().equals("SHIL")) {
@@ -149,17 +170,23 @@ public class SpareChangeSend extends AppCompatActivity {
             total = total + send;
             result = result + send;
 
-            db.collection("users").document(email).collection("Spare Change").document(coin.getId()).delete();
+            db.collection("users").document(email)
+                    .collection("Spare Change").document(coin.getId()).delete();
 
         }
-        if ((gold != null) & (selectedCoins.size() > 0)) {
+        if (selectedCoins.size() > 0) {
+
             Map<String, Object> g = new HashMap<>();
             g.put("Gold", result);
             db.collection("users").document(friend).set(g);
-            Toast.makeText(this, "Sent "+ friend + ":\n" + String.valueOf(total) + " gold", Toast.LENGTH_LONG).show();
+
+            Toast.makeText(this, "Sent "+ friend + ":\n"
+                    + String.valueOf(total) + " gold", Toast.LENGTH_LONG).show();
+
             backToFriends();
         } else {
-            Toast.makeText(this, "Please select coins to send", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please select coins to send",
+                    Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -174,12 +201,20 @@ public class SpareChangeSend extends AppCompatActivity {
 
         int size = mSpareChange.size();
 
-        db.collection("users").document(friend).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                gold = documentSnapshot.getDouble("Gold");
-            }
-        });
+        db.collection("users").document(friend).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        gold = documentSnapshot.getDouble("Gold");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(SpareChangeSend.this, "Failed to retrieve gold",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
 
         Double result = gold;
 
@@ -196,58 +231,82 @@ public class SpareChangeSend extends AppCompatActivity {
                 send = send + dolrexchange * coin.getValue();
             }
 
-
-
             total = total + send;
             result = result + send;
 
-            db.collection("users").document(email).collection("Spare Change").document(coin.getId()).delete();
+            db.collection("users").document(email)
+                    .collection("Spare Change").document(coin.getId()).delete();
 
         }
         if ((gold != null)) {
+
             Map<String, Object> g = new HashMap<>();
             g.put("Gold", result);
             db.collection("users").document(friend).set(g);
-            Toast.makeText(this, "Sent "+ friend + ":\n" + String.valueOf(total) + " gold", Toast.LENGTH_LONG).show();
+
+            Toast.makeText(this, "Sent "+ friend + ":\n"
+                    + String.valueOf(total) + " gold", Toast.LENGTH_LONG).show();
+
             backToFriends();
-        } else {
+        }
+        else {
             Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
             backToFriends();
         }
     }
 
 
-
     private void updateList() {
-        mSpareChange.clear();
-        db.collection("users").document(email).collection("Spare Change").addSnapshotListener(new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                for (int i = 0; i < queryDocumentSnapshots.size(); i++) {
-                    String value = queryDocumentSnapshots.getDocuments().get(i).get("value").toString();
-                    String currency = queryDocumentSnapshots.getDocuments().get(i).get("currency").toString();
-                    String res = currency + ": " + value;
-                    Double val = Double.parseDouble(value);
-                    String id = queryDocumentSnapshots.getDocuments().get(i).getId();
-                    Coin coin = new Coin(id, val, currency);
-                    mSpareChange.add(res);
-                    coins.put(res, coin);
-                }
-                HashSet hs = new HashSet();
-                hs.addAll(mSpareChange);
-                mSpareChange.clear();
-                mSpareChange.addAll(hs);
+        //In this method we update and fill the listView
+        db.collection("users")
+                .document(email).collection("Spare Change").get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
 
-                ArrayAdapter arrayAdapter = new ArrayAdapter(com.example.s1658030.coinzj.SpareChangeSend.this, R.layout.my_layout, R.id.row_layout, mSpareChange);
-                listView.setAdapter(arrayAdapter);
-                listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-            }
-        });
-    }
+                        //Iterate over all of the coins in Spare Change
+                        for (int i = 0; i < queryDocumentSnapshots.size(); i++) {
 
+                            //Retrieve the value, currency and ID of each coin
+                            String value = queryDocumentSnapshots.getDocuments()
+                                    .get(i).get("value").toString();
+                            String currency = queryDocumentSnapshots.getDocuments()
+                                    .get(i).get("currency").toString();
+                            String id = queryDocumentSnapshots.getDocuments().get(i).getId();
 
-    protected void onStart() {
-        super.onStart();
+                            //Create the display name as res and parse the value for creating a coin
+                            String res = currency + ": " + value;
+                            Double val = Double.parseDouble(value);
+
+                            //Create coin object, add res to Array for listView, add coin to HashMap
+                            Coin coin = new Coin(id, val, currency);
+                            mSpareChange.add(res);
+                            coins.put(res, coin);
+
+                        }
+
+                        //Making sure there are no duplicates by creating a Set
+                        HashSet hs = new HashSet();
+                        hs.addAll(mSpareChange);
+                        mSpareChange.clear();
+                        mSpareChange.addAll(hs);
+
+                        //Set arrayadapter and update the listView
+                        arrayAdapter = new ArrayAdapter(SpareChangeSend.this,
+                                R.layout.my_layout, R.id.row_layout, mSpareChange);
+                        listView.setAdapter(arrayAdapter);
+                        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+                    }
+
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(SpareChangeSend.this, "We failed",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+
     }
 
 
@@ -255,16 +314,5 @@ public class SpareChangeSend extends AppCompatActivity {
         Intent intent = new Intent(this,Friends.class);
         startActivity(intent);
     }
-
-
-    protected void onStop() {
-        super.onStop();
-    }
-
-
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
 
 }

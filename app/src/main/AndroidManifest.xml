@@ -34,6 +34,8 @@
         <activity android:name=".WalletSend" />
         <activity android:name=".SendToSpareChange" />
         <activity android:name=".Gambling" />
+        <activity android:name=".HelpPage" />
+        <activity android:name=".HelpPage2"></activity>
     </application>
 
 </manifest>
