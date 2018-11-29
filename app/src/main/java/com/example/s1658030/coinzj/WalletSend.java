@@ -89,6 +89,10 @@ public class WalletSend extends AppCompatActivity {
         });
 
 
+        TextView displayUsername = findViewById(R.id.displayUsername);
+        displayUsername.setText(friend);
+
+
         Button mSendCoins = findViewById(R.id.sendcoinsbutton2);
         mSendCoins.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -11,6 +11,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -94,6 +95,9 @@ public class SpareChangeSend extends AppCompatActivity {
                 }
             }
         });
+
+        TextView displayUsername = findViewById(R.id.displayUsernameSP);
+        displayUsername.setText(friend);
 
 
         Button mSendCoins = findViewById(R.id.sendcoinsbutton);

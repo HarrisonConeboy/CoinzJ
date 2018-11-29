@@ -44,7 +44,6 @@ import javax.annotation.Nullable;
 
 public class MainMenu extends AppCompatActivity {
 
-    private String tag = "MainMenu";
     private LocalDateTime current = LocalDateTime.now();
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
     private String todaysDate = current.format(formatter);
@@ -60,7 +59,7 @@ public class MainMenu extends AppCompatActivity {
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    private String email = mAuth.getCurrentUser().getEmail();
+    private String email;
 
     private ListenerRegistration listener;
 
@@ -68,15 +67,16 @@ public class MainMenu extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_menu);
-        Switch music = findViewById(R.id.musicSwitch);
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+
 
         svc = new Intent(this, BackgroundSoundService.class);
         svc.setAction("com.example.s1658030.coinzj.BackgroundSoundService");
 
 
         getGold();
-
+        
+        Switch music = findViewById(R.id.musicSwitch);
         music.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -144,14 +144,13 @@ public class MainMenu extends AppCompatActivity {
         SharedPreferences settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE);
         downloadDate = settings.getString("lastDownloadDate","");
         if (downloadDate.equals(todaysDate)) {
-            Log.d(tag, "Already downloaded today's map");
             mapData = settings.getString("lastMap", "");
             shil = settings.getString("shil","");
             peny = settings.getString("peny","");
             quid = settings.getString("quid","");
             dolr = settings.getString("dolr","");
-        } else {
-            Log.d(tag, "Downloading today's map");
+        }
+        else {
 
             Toast.makeText(this, "Downloading map", Toast.LENGTH_LONG).show();
             downloadDate = todaysDate;

@@ -1,5 +1,7 @@
 package com.example.s1658030.coinzj;
 
+//This is not my code and is credited to StackOverflow
+
 import android.app.Service;
 import android.content.Intent;
 import android.media.MediaPlayer;
