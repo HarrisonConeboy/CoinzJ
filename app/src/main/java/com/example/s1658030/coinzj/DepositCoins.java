@@ -18,10 +18,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.text.DecimalFormat;
@@ -32,12 +29,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import javax.annotation.Nullable;
 
 public class DepositCoins extends AppCompatActivity {
 
     private Bundle bundle;
 
+    //Get todays date formatted correctly
     private LocalDateTime current = LocalDateTime.now();
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private String todaysDate = current.format(formatter);
@@ -47,63 +44,88 @@ public class DepositCoins extends AppCompatActivity {
     private String peny;
     private String dolr;
     private Integer banked;
-    private Integer check = 0;
-    private ListView listView;
-    private ArrayList<String> mWallet = new ArrayList<String>(50);
-    private ArrayList<Object> walletList = new ArrayList<Object>();
-    private HashMap<String, Coin> coins = new HashMap<>();
 
+    //Set a variable check as we must run a method twice
+    private Integer check = 0;
+
+    //These are listView variables
+    private ListView listView;
+    //mWallet represents the coins in Wallet
+    private ArrayList<String> mWallet = new ArrayList<>(50);
+    //walletList represents coins selected
+    private ArrayList<Object> walletList = new ArrayList<>();
+    //coins is a HashMap relating coins stored in the listView to objects
+    private HashMap<String, Coin> coins = new HashMap<>();
+    //Array adapter to edit listView
+    private ArrayAdapter arrayAdapter;
+
+    //Create Firebase variables
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    private String email = mAuth.getCurrentUser().getEmail();
+    private String email;
 
-    private ArrayAdapter arrayAdapter;
+    //Textview for displaying how many coins user banked today
     private TextView displayBanked;
 
 
+    //==============================================================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_deposit_coins);
 
+        //Get previous bundle of Extras
         bundle = getIntent().getExtras();
 
+        //If user is not null, get email
+        if (mAuth.getCurrentUser() != null) {
+            email = mAuth.getCurrentUser().getEmail();
+        }
+
+        //Set listView object
         listView = findViewById(R.id.walletInDeposit);
 
+        //Get all of the exchange rates from shared preferences
         SharedPreferences settings = getSharedPreferences("MyPrefsFile", Context.MODE_PRIVATE);
-        TextView mShil = findViewById(R.id.shilValue);
-        TextView mPeny = findViewById(R.id.penyValue);
-        TextView mDolr = findViewById(R.id.dolrValue);
-        TextView mQuid = findViewById(R.id.quidValue);
         shil = settings.getString("shil", "");
         peny = settings.getString("peny", "");
         quid = settings.getString("quid", "");
         dolr = settings.getString("dolr", "");
+
+        //Set the TextViews to display the exchange rates
+        TextView mShil = findViewById(R.id.shilValue);
+        TextView mPeny = findViewById(R.id.penyValue);
+        TextView mDolr = findViewById(R.id.dolrValue);
+        TextView mQuid = findViewById(R.id.quidValue);
         mShil.setText(shil);
         mQuid.setText(quid);
         mDolr.setText(dolr);
         mPeny.setText(peny);
 
-
+        //Update the listView
         updateList();
 
+        //There is a strange glitch that results in me not being able to access coins banked on
+        // the first attempt, I worked around this by calling the method twice and having a
+        // simple checker at the start to dictate which branch it should follow
         depositCoins();
         check = 1;
 
-
+        //Now I can retrieve Gold banked which was passed through the intent
         Bundle bundle = getIntent().getExtras();
         String temp = bundle.getString("gold");
+        //We set the TextView to the current gold after formatting it to two decimal places
         TextView currentGold = findViewById(R.id.currentGold3);
         DecimalFormat df = new DecimalFormat("#.##");
         Double temp2 = Double.parseDouble(temp);
         currentGold.setText(String.valueOf(df.format(temp2)));
 
-
+        //Display the number of coins banked today with the method
         displayBanked = findViewById(R.id.displayBanked);
         updateCoinsBanked();
 
 
-
+        //Set a listener which adds and removes coins to the walletList if pressed on the listView
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -116,6 +138,7 @@ public class DepositCoins extends AppCompatActivity {
         });
 
 
+        //Set listener for deposit coins button, if pressed call method
         Button mDeposit = findViewById(R.id.depositCoins);
         mDeposit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -125,6 +148,7 @@ public class DepositCoins extends AppCompatActivity {
         });
 
 
+        //Set listener for back button, if pressed call method
         Button back = findViewById(R.id.back2);
         back.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -136,38 +160,59 @@ public class DepositCoins extends AppCompatActivity {
     }
 
 
+    //Method used for depositing selected coins
     private void depositCoins() {
-        if (check == 0) {
+        //This is the first iteration to obtain coins banked
 
+        if (check == 0) {
             //Get number of banked coins today first attempt,
             // this will make sure the second attempt succeeds
             db.collection("users")
                     .document(email).collection("RecentDate").get()
                     .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+
+                //If we successfully access the database we check
+                // if date saved is equal to today's date
                 @Override
                 public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
 
+                    //Check if today's date is equal to date saved in database
                     if (!queryDocumentSnapshots.getDocuments().get(0).getId().equals(todaysDate)) {
+
+                        //If it's not then we create a map object to refresh Banked to 0
                         HashMap<String,Object> fresh = new HashMap<>();
                         fresh.put("Banked",0);
-                        db.collection("users").document(email).collection("RecentDate").document(todaysDate).set(fresh);
-                        db.collection("users").document(email).collection("RecentDate").document(queryDocumentSnapshots.getDocuments().get(0).getId()).delete();
+
+                        //We add the new object into the database
+                        db.collection("users").document(email).collection
+                                ("RecentDate").document(todaysDate).set(fresh);
+
+                        //We delete the previous object
+                        db.collection("users")
+                                .document(email).collection("RecentDate")
+                                .document(queryDocumentSnapshots.getDocuments().get(0).getId()).delete();
+
                         banked = 0;
-                    } else {
-                        banked = Integer.parseInt(queryDocumentSnapshots.getDocuments().get(0).get("Banked").toString());
+
+                    }//Otherwise we simply set banked to the field value
+                    else {
+                        banked = Integer.parseInt(queryDocumentSnapshots
+                                .getDocuments().get(0).get("Banked").toString());
                     }
                 }
             })
+                    //Add failure listener in case we are unable to access the database
                     .addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    Toast.makeText(DepositCoins.this, "Failed to retrieve banked coins", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DepositCoins.this, "Failed to retrieve banked coins",
+                            Toast.LENGTH_SHORT).show();
                 }
             });
-
-        } else {
+        }
+        else {
+            //total represents the total coins to be added to the users current gold
             Double total = 0.0;
-            Double add = 0.0;
 
             //Retrieve the banked gold value that was passed from Bank
             Bundle bundle = getIntent().getExtras();
@@ -176,7 +221,7 @@ public class DepositCoins extends AppCompatActivity {
 
             //This is the second attempt at getting the number of coins banked today, we also check
             //if it's a new date and if so we update the database and set the number of banked coins
-            //to be 0
+            //to be 0. It is identical to the first attempt.
             db.collection("users")
                     .document(email).collection("RecentDate").get()
                     .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
@@ -184,20 +229,31 @@ public class DepositCoins extends AppCompatActivity {
                         public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
 
                             if (!queryDocumentSnapshots.getDocuments().get(0).getId().equals(todaysDate)) {
+
                                 HashMap<String,Object> fresh = new HashMap<>();
                                 fresh.put("Banked",0);
-                                db.collection("users").document(email).collection("RecentDate").document(todaysDate).set(fresh);
-                                db.collection("users").document(email).collection("RecentDate").document(queryDocumentSnapshots.getDocuments().get(0).getId()).delete();
+
+                                db.collection("users").document(email).collection(
+                                        "RecentDate").document(todaysDate).set(fresh);
+
+                                db.collection("users")
+                                        .document(email).collection("RecentDate")
+                                        .document(queryDocumentSnapshots.getDocuments().get(0).getId()).delete();
+
                                 banked = 0;
-                            } else {
-                                banked = Integer.parseInt(queryDocumentSnapshots.getDocuments().get(0).get("Banked").toString());
+
+                            }
+                            else {
+                                banked = Integer.parseInt(queryDocumentSnapshots
+                                        .getDocuments().get(0).get("Banked").toString());
                             }
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    Toast.makeText(DepositCoins.this, "Failed to retrieve banked coins", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DepositCoins.this, "Failed to retrieve banked coins",
+                            Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -219,13 +275,15 @@ public class DepositCoins extends AppCompatActivity {
                 Toast.makeText(this, "You can only bank 25 coins per day",
                         Toast.LENGTH_SHORT).show();
             }
-            //Method to update gold banked, number of coins banked and finally the wallet
+            //Method to update gold banked, the number of coins banked and finally the wallet
             else {
 
                 //Iterate over the selected coins size and obtain the associated coin from the Map
                 for (int i = 0; i < size; i++) {
                     Coin coin = coins.get(walletList.get(i));
 
+                    //add represents the gold value of a single coin
+                    Double add = 0.0;
 
                     //Calculate the value in gold of the coin
                     if (coin.getCurrency().equals("SHIL")) {
@@ -238,10 +296,11 @@ public class DepositCoins extends AppCompatActivity {
                         add = add + dolrexchange * coin.getValue();
                     }
 
-
                     //Now delete the coin from Wallet and add the totals
                     db.collection("users").document(email)
                             .collection("Wallet").document(coin.getId()).delete();
+
+                    //Update result and total
                     result = result + add;
                     total = total + add;
 
@@ -255,7 +314,7 @@ public class DepositCoins extends AppCompatActivity {
                     g.put("Gold", result);
                     db.collection("users").document(email).set(g);
 
-                    //Set the new number of coins banked today
+                    //Create object to update the number of coins banked today
                     HashMap<String,Object> newBanked = new HashMap<>();
                     newBanked.put("Banked",(walletList.size() + banked));
 
@@ -281,6 +340,7 @@ public class DepositCoins extends AppCompatActivity {
     }
 
 
+    //Method to update the listView
     private void updateList() {
         //In this method we update and fill the listView
         db.collection("users")
@@ -334,10 +394,15 @@ public class DepositCoins extends AppCompatActivity {
 
     }
 
+
+    //Method to check and possibly update the number of coins banked to the textView
     private void updateCoinsBanked() {
+        //Method is similar to that used in MainMenu
         db.collection("users")
                 .document(email).collection("RecentDate").document(todaysDate).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+
+                    //Set displayBanked to the number of coins banked
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
                         displayBanked.setText(documentSnapshot.get("Banked").toString());
@@ -352,15 +417,14 @@ public class DepositCoins extends AppCompatActivity {
                 });
     }
 
-    protected void onStart() {
-        super.onStart();
-    }
 
-
+    //Simple method to go back to bank
     private void backToBank(Intent intent) {
         startActivity(intent);
     }
 
+
+    //Method to go back to bank with the same bundle
     private void backToBankNoChange() {
         //For the back button we retrieve the extras given
         // to this activity and send them back with no change
@@ -370,17 +434,4 @@ public class DepositCoins extends AppCompatActivity {
         startActivity(intent);
     }
 
-
-    protected void onStop() {
-        super.onStop();
-    }
-
-
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-
 }
-
-

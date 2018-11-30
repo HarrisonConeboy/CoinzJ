@@ -18,27 +18,27 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import javax.annotation.Nullable;
 
+//This class is similar to that of SpareChangeSend
 public class WalletSend extends AppCompatActivity {
     private ListView listView;
-    private ArrayList<String> mWallet = new ArrayList<String>();
-    private ArrayList<Object> selectedCoins = new ArrayList<Object>();
+    private ArrayList<String> mWallet = new ArrayList<>();
+    private ArrayList<Object> selectedCoins = new ArrayList<>();
     private HashMap<String, Coin> coins = new HashMap<>();
 
+    //Set Firebase variables
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    private String email = mAuth.getCurrentUser().getEmail();
+    private String email;
     private String friend;
 
     private String shil;
@@ -50,14 +50,22 @@ public class WalletSend extends AppCompatActivity {
     private Double gold;
     private ArrayAdapter arrayAdapter;
 
+
+    //==============================================================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wallet_send);
 
+        //Get friend's username from bundle
         Bundle bundle = getIntent().getExtras();
         friend = bundle.getString("friend");
 
+        if (mAuth.getCurrentUser() != null) {
+            email = mAuth.getCurrentUser().getEmail();
+        }
+
+        //Get exchange rates from shared preferences
         SharedPreferences settings = getSharedPreferences("MyPrefsFile", Context.MODE_PRIVATE);
 
         shil = settings.getString("shil", "");
@@ -65,10 +73,13 @@ public class WalletSend extends AppCompatActivity {
         quid = settings.getString("quid", "");
         dolr = settings.getString("dolr", "");
 
+        //Set listview
         listView = findViewById(R.id.walletSend);
 
+        //Update the listView
         updateList();
 
+        //First attempt at getting friend's gold (it will return null)
         db.collection("users").document(friend).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
@@ -77,6 +88,13 @@ public class WalletSend extends AppCompatActivity {
         });
 
 
+        //Display the username of the friend in TextView
+        TextView displayUsername = findViewById(R.id.displayUsername);
+        displayUsername.setText(friend);
+
+
+        //Set on click listener on the list view,
+        // when coins are pressed add/remove them from selectedCoins
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -89,10 +107,7 @@ public class WalletSend extends AppCompatActivity {
         });
 
 
-        TextView displayUsername = findViewById(R.id.displayUsername);
-        displayUsername.setText(friend);
-
-
+        //Set on click listener to Send Coins button, when pressed calls method sendCoins
         Button mSendCoins = findViewById(R.id.sendcoinsbutton2);
         mSendCoins.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -102,6 +117,7 @@ public class WalletSend extends AppCompatActivity {
         });
 
 
+        //Set on click listener to Back button, when pressed returns user to Friends Activity
         Button back = findViewById(R.id.back6);
         back.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -110,6 +126,8 @@ public class WalletSend extends AppCompatActivity {
             }
         });
 
+
+        //Set on click listener to Send All button, when pressed calls method sendAll
         Button sendAll = findViewById(R.id.sendAll2);
         sendAll.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -120,10 +138,15 @@ public class WalletSend extends AppCompatActivity {
 
     }
 
+
+    //Method to send the value in gold of the coins in selectedCoins to friend
     private void sendCoins() {
+        //Total represents the total value of gold to give friend,
+        // send represents value in gold of each coin
         Double total = 0.0;
         send = 0.0;
 
+        //Parse exchange rates
         Double shilexchange = Double.parseDouble(shil);
         Double quidexchange = Double.parseDouble(quid);
         Double dolrexchange = Double.parseDouble(dolr);
@@ -131,18 +154,27 @@ public class WalletSend extends AppCompatActivity {
 
         int size = selectedCoins.size();
 
-        db.collection("users").document(friend).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+        //Second attempt at getting friend's gold which succeeds,
+        // and we save it in a private variable
+        db.collection("users").document(friend).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 gold = documentSnapshot.getDouble("Gold");
             }
         });
 
+        //Result stores the value which we will set friend's gold to
         Double result = gold;
 
+        //Iterate over all of the coins in selectedCoins
         for (int i = 0; i < size; i++) {
             Coin coin = coins.get(selectedCoins.get(i));
 
+            //Reset coin value
+            send = 0.0;
+
+            //Calculate value of coin in gold
             if (coin.getCurrency().equals("SHIL")) {
                 send = send + shilexchange * coin.getValue();
             } else if (coin.getCurrency().equals("QUID")) {
@@ -154,24 +186,40 @@ public class WalletSend extends AppCompatActivity {
             }
 
 
-
+            //Update the total and result
             total = total + send;
             result = result + send;
 
-            db.collection("users").document(email).collection("Wallet").document(coin.getId()).delete();
+            //Delete the coin from user's Wallet
+            db.collection("users").document(email).collection("Wallet")
+                    .document(coin.getId()).delete();
 
         }
-        if ((gold != null) & (selectedCoins.size() > 0)) {
+        //Only enter if user has selected coins
+        if (selectedCoins.size() > 0) {
+
+            //Create Map object to update friend's gold with the 'result'
             Map<String, Object> g = new HashMap<>();
             g.put("Gold", result);
+            //Update database
             db.collection("users").document(friend).set(g);
-            Toast.makeText(this, "Sent "+ friend + ":\n" + String.valueOf(total) + " gold", Toast.LENGTH_LONG).show();
+
+            //Format and Toast the result to user
+            DecimalFormat df = new DecimalFormat("#.###");
+            Toast.makeText(this, "Sent "+ friend + ":\n" +
+                    String.valueOf(df.format(total)) + " gold", Toast.LENGTH_LONG).show();
+
+            //Return user back to Friends activity
             backToFriends();
-        } else {
+        }
+        //Otherwise advise user to select coins
+        else {
             Toast.makeText(this, "Please select coins to send", Toast.LENGTH_SHORT).show();
         }
     }
 
+
+    //Method is similar to sendCoins, except we select coins from mWallet
     private void sendAllCoins() {
         Double total = 0.0;
         send = 0.0;
@@ -183,7 +231,9 @@ public class WalletSend extends AppCompatActivity {
 
         int size = mWallet.size();
 
-        db.collection("users").document(friend).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+        //Retrieve friend's gold
+        db.collection("users").document(friend).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 gold = documentSnapshot.getDouble("Gold");
@@ -192,9 +242,13 @@ public class WalletSend extends AppCompatActivity {
 
         Double result = gold;
 
+        //Iterate over all coins within wallet
         for (int i = 0; i < size; i++) {
             Coin coin = coins.get(mWallet.get(i));
 
+            send = 0.0;
+
+            //Calculate coin value
             if (coin.getCurrency().equals("SHIL")) {
                 send = send + shilexchange * coin.getValue();
             } else if (coin.getCurrency().equals("QUID")) {
@@ -206,26 +260,34 @@ public class WalletSend extends AppCompatActivity {
             }
 
 
-
+            //Update variables
             total = total + send;
             result = result + send;
 
-            db.collection("users").document(email).collection("Wallet").document(coin.getId()).delete();
+            //Delete coin from wallet
+            db.collection("users").document(email)
+                    .collection("Wallet").document(coin.getId()).delete();
 
         }
-        if ((gold != null)) {
-            Map<String, Object> g = new HashMap<>();
-            g.put("Gold", result);
-            db.collection("users").document(friend).set(g);
-            Toast.makeText(this, "Sent "+ friend + ":\n" + String.valueOf(total) + " gold", Toast.LENGTH_LONG).show();
-            backToFriends();
-        } else {
-            Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
-            backToFriends();
-        }
+
+        //Update friend's new gold with result
+        Map<String, Object> g = new HashMap<>();
+        g.put("Gold", result);
+        //Update database
+        db.collection("users").document(friend).set(g);
+
+        //Toast the formatted result to user
+        DecimalFormat df = new DecimalFormat("#.###");
+        Toast.makeText(this, "Sent "+ friend + ":\n" +
+                String.valueOf(df.format(total)) + " gold", Toast.LENGTH_LONG).show();
+
+        //Return user back to Friends Activity
+        backToFriends();
+
     }
 
 
+    //Method is identical to that in DepositCoins
     private void updateList() {
         //In this method we update and fill the listView
         db.collection("users")
@@ -280,26 +342,11 @@ public class WalletSend extends AppCompatActivity {
     }
 
 
-    protected void onStart() {
-        super.onStart();
-    }
-
-
+    //Method to return the user to Friends
     private void backToFriends() {
         Intent intent = new Intent(this,Friends.class);
         startActivity(intent);
     }
-
-
-    protected void onStop() {
-        super.onStop();
-    }
-
-
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
 
 }
 

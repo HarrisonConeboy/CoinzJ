@@ -1,15 +1,16 @@
 package com.example.s1658030.coinzj;
 
-import android.graphics.drawable.Icon;
-
-import com.mapbox.mapboxsdk.annotations.IconFactory;
+//The key which refers String fields to their associated marker, I created custom markers for each
+// of the floored coin values, I have associated each of the floored values + the currency to one
+// of these markers, this is the class which shows that relation
 
 import java.util.HashMap;
 
 public class MarkerIcons {
+
     public HashMap<String,Integer> masterKey = new HashMap<String,Integer>();
 
-    public MarkerIcons() {
+    MarkerIcons() {
         masterKey.put("SHIL0",R.drawable.shil_zero);
         masterKey.put("SHIL1",R.drawable.shil_one);
         masterKey.put("SHIL2",R.drawable.shil_two);
@@ -54,4 +55,5 @@ public class MarkerIcons {
         masterKey.put("QUID8",R.drawable.quid_eight);
         masterKey.put("QUID9",R.drawable.quid_nine);
     }
+
 }

@@ -19,12 +19,14 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 
 public class MainMenu extends AppCompatActivity {
@@ -54,6 +56,7 @@ public class MainMenu extends AppCompatActivity {
     private String email;
 
 
+    //==============================================================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,6 +73,9 @@ public class MainMenu extends AppCompatActivity {
 
         //Get the value of the Gold banked
         getGold();
+
+        //Check RecentDate
+        updateDate();
 
         //Get switch in layout and set listener to stop/start music depending on changed state
         Switch music = findViewById(R.id.musicSwitch);
@@ -246,6 +252,52 @@ public class MainMenu extends AppCompatActivity {
                     }
                 });
     }
+    //This method is used to reset the number of bankable coins per day
+
+
+    private void updateDate() {
+
+        //We have to create another formatter to set the date in yyyy-MM-dd format
+        DateTimeFormatter newFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String todaysDateFormatted = current.format(newFormatter);
+
+        //Going into database
+        db.collection("users")
+                .document(email).collection("RecentDate").get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+
+                    //Check if the date in RecentDate is equal to today's date,
+                    // if not update it and set Banked to be 0
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        if (!queryDocumentSnapshots.getDocuments().get(0).getId().equals(todaysDateFormatted)) {
+
+                            HashMap<String, Object> temp = new HashMap<>();
+                            temp.put("Banked", 0);
+
+                            //Update for recent
+                            db.collection("users").document(email)
+                                    .collection("RecentDate").document(todaysDateFormatted).set(temp);
+
+                            //Delete previous
+                            db.collection("users").document(email)
+                                    .collection("RecentDate")
+                                    .document(queryDocumentSnapshots.getDocuments().get(0).getId()).delete();
+
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    //Toast error if unable to access database
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(MainMenu.this, "Error occurred " +
+                                "retrieving date", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+    }
+
 
     @Override
     public void onStop() {

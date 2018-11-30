@@ -1,6 +1,7 @@
 package com.example.s1658030.coinzj;
 
 //This is not my code and is credited to StackOverflow
+//The code is used to play music in the background
 
 import android.app.Service;
 import android.content.Intent;

@@ -10,6 +10,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+//Class is identical to that shown in lectures
+
 public class DownloadFileTask extends AsyncTask<String,Void,String> {
 
     @Override
@@ -28,9 +30,12 @@ public class DownloadFileTask extends AsyncTask<String,Void,String> {
     @NonNull
     private String readStream(InputStream stream)
         throws IOException {
+
+        //Read input from stream, build result as a string
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
         StringBuilder sb = new StringBuilder();
-        String line = "";
+        String line;
+
         while ((line = reader.readLine()) != null) {
             sb.append(line).append("\n");
         }
@@ -53,4 +58,5 @@ public class DownloadFileTask extends AsyncTask<String,Void,String> {
         super.onPostExecute(result);
         DownloadCompleteRunner.downloadComplete(result);
     }
+
 }

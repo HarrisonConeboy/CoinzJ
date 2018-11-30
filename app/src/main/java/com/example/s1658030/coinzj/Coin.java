@@ -1,5 +1,7 @@
 package com.example.s1658030.coinzj;
 
+//This Java class is used to create Coin objects throughout the app
+
 public class Coin {
 
     private String id;
@@ -7,7 +9,7 @@ public class Coin {
     private String currency;
 
 
-    public Coin(String id, Double value, String currency) {
+    Coin(String id, Double value, String currency) {
         this.id = id;
         this.value = value;
         this.currency = currency;

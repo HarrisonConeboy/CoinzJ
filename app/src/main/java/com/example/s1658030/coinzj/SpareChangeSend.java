@@ -18,28 +18,27 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import java.lang.reflect.Array;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import javax.annotation.Nullable;
 
+//Activity which send coins from Spare Change to friend
 public class SpareChangeSend extends AppCompatActivity {
     private ListView listView;
-    private ArrayList<String> mSpareChange = new ArrayList<String>();
-    private ArrayList<Object> selectedCoins = new ArrayList<Object>();
+    private ArrayList<String> mSpareChange = new ArrayList<>();
+    private ArrayList<Object> selectedCoins = new ArrayList<>();
     private HashMap<String, Coin> coins = new HashMap<>();
 
+    //Set Firebase variables
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    private String email = mAuth.getCurrentUser().getEmail();
+    private String email;
     private String friend;
 
     private String shil;
@@ -50,14 +49,23 @@ public class SpareChangeSend extends AppCompatActivity {
     private Double gold;
     private ArrayAdapter arrayAdapter;
 
+
+    //==============================================================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_spare_change_send);
 
+        //Get friends username from bundle and save it into private variable
         Bundle bundle = getIntent().getExtras();
         friend = bundle.getString("friend");
 
+        //Get current user email if not null
+        if (mAuth.getCurrentUser() != null) {
+            email = mAuth.getCurrentUser().getEmail();
+        }
+
+        //Get coin exchange rates from shared preferences
         SharedPreferences settings = getSharedPreferences("MyPrefsFile", Context.MODE_PRIVATE);
 
         shil = settings.getString("shil", "");
@@ -65,10 +73,15 @@ public class SpareChangeSend extends AppCompatActivity {
         quid = settings.getString("quid", "");
         dolr = settings.getString("dolr", "");
 
+        //Set listView
         listView = findViewById(R.id.sparechange);
 
+        //Update the listView
         updateList();
 
+
+        //Get friends gold by accessing their database
+        // section and saving gold into a private variable
         db.collection("users").document(friend).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
@@ -85,6 +98,7 @@ public class SpareChangeSend extends AppCompatActivity {
                 });
 
 
+        //Set listView listener, when a coin is pressed add/remove it from selectedCoins
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -96,10 +110,13 @@ public class SpareChangeSend extends AppCompatActivity {
             }
         });
 
+
+        //Set TextView to display who user is sending coins to
         TextView displayUsername = findViewById(R.id.displayUsernameSP);
         displayUsername.setText(friend);
 
 
+        //Set listener to Send Coins button, when pressed call the method sendCoins
         Button mSendCoins = findViewById(R.id.sendcoinsbutton);
         mSendCoins.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,6 +126,7 @@ public class SpareChangeSend extends AppCompatActivity {
         });
 
 
+        //Set listener to Back button, when pressed returns the user to Friends Activity
         Button back = findViewById(R.id.back2);
         back.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -117,6 +135,8 @@ public class SpareChangeSend extends AppCompatActivity {
             }
         });
 
+
+        //Set listener to Send All button, when pressed call the method sendAll
         Button sendAll = findViewById(R.id.sendAll);
         sendAll.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -127,10 +147,14 @@ public class SpareChangeSend extends AppCompatActivity {
 
     }
 
+
+    //Method which sends user's Friend the gold value of the coins in selectedCoins
     private void sendCoins() {
+        //Total represents the total gold to send, send represents the gold value of each coin
         Double total = 0.0;
         send = 0.0;
 
+        //Parse each of the exchange rates
         Double shilexchange = Double.parseDouble(shil);
         Double quidexchange = Double.parseDouble(quid);
         Double dolrexchange = Double.parseDouble(dolr);
@@ -138,8 +162,11 @@ public class SpareChangeSend extends AppCompatActivity {
 
         int size = selectedCoins.size();
 
+        //Second attempt at getting friend's gold as first always fails
         db.collection("users").document(friend).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+
+                    //Save the gold into private variable
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
                         gold = documentSnapshot.getDouble("Gold");
@@ -153,11 +180,17 @@ public class SpareChangeSend extends AppCompatActivity {
                     }
                 });
 
+        //Result is what we set friend's gold to
         Double result = gold;
 
+        //Iterate over all of the coins in selectedCoins
         for (int i = 0; i < size; i++) {
 
+            //Get the respective coin in coins
             Coin coin = coins.get(selectedCoins.get(i));
+
+            //Reset then calculate the value of each coin in gold
+            send = 0.0;
 
             if (coin.getCurrency().equals("SHIL")) {
                 send = send + shilexchange * coin.getValue();
@@ -170,34 +203,47 @@ public class SpareChangeSend extends AppCompatActivity {
             }
 
 
-
+            //Update result and total
             total = total + send;
             result = result + send;
 
+            //Delete the coin from the user's Spare Change
             db.collection("users").document(email)
                     .collection("Spare Change").document(coin.getId()).delete();
 
         }
+        //Only enter if user has selected some coins
         if (selectedCoins.size() > 0) {
 
+            //Create Map object used to set the new result of friend's gold
             Map<String, Object> g = new HashMap<>();
             g.put("Gold", result);
+            //Update database
             db.collection("users").document(friend).set(g);
 
-            Toast.makeText(this, "Sent "+ friend + ":\n"
-                    + String.valueOf(total) + " gold", Toast.LENGTH_LONG).show();
+            //Toast a message to the user declaring how much they sent their friend
+            DecimalFormat df = new DecimalFormat("#.###");
 
+            Toast.makeText(this, "Sent "+ friend + ":\n"
+                    + String.valueOf(df.format(total)) + " gold", Toast.LENGTH_LONG).show();
+
+            //Return user to Friends Activity
             backToFriends();
-        } else {
+        }
+        //Otherwise advise user to select some coins
+        else {
             Toast.makeText(this, "Please select coins to send",
                     Toast.LENGTH_SHORT).show();
         }
     }
 
+
+    //Similar the sendCoins method, except we iterate over the entire Spare Change
     private void sendAllCoins() {
         Double total = 0.0;
         send = 0.0;
 
+        //Get exchange rates
         Double shilexchange = Double.parseDouble(shil);
         Double quidexchange = Double.parseDouble(quid);
         Double dolrexchange = Double.parseDouble(dolr);
@@ -205,6 +251,7 @@ public class SpareChangeSend extends AppCompatActivity {
 
         int size = mSpareChange.size();
 
+        //Get friend gold
         db.collection("users").document(friend).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
@@ -222,9 +269,13 @@ public class SpareChangeSend extends AppCompatActivity {
 
         Double result = gold;
 
+        //Iterate over all coins in user's Spare Change
         for (int i = 0; i < size; i++) {
             Coin coin = coins.get(mSpareChange.get(i));
 
+            send = 0.0;
+
+            //Calculate value of coin in gold
             if (coin.getCurrency().equals("SHIL")) {
                 send = send + shilexchange * coin.getValue();
             } else if (coin.getCurrency().equals("QUID")) {
@@ -235,31 +286,34 @@ public class SpareChangeSend extends AppCompatActivity {
                 send = send + dolrexchange * coin.getValue();
             }
 
+            //Update variables
             total = total + send;
             result = result + send;
 
+            //Remove the coin from user's Spare Change
             db.collection("users").document(email)
                     .collection("Spare Change").document(coin.getId()).delete();
 
         }
-        if ((gold != null)) {
 
-            Map<String, Object> g = new HashMap<>();
-            g.put("Gold", result);
-            db.collection("users").document(friend).set(g);
+        //Set friend's new gold value
+        Map<String, Object> g = new HashMap<>();
+        g.put("Gold", result);
+        db.collection("users").document(friend).set(g);
 
-            Toast.makeText(this, "Sent "+ friend + ":\n"
-                    + String.valueOf(total) + " gold", Toast.LENGTH_LONG).show();
+        //Toast how much gold the user sent their friend
+        DecimalFormat df = new DecimalFormat("#.###");
 
-            backToFriends();
-        }
-        else {
-            Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
-            backToFriends();
-        }
+        Toast.makeText(this, "Sent "+ friend + ":\n"
+                + String.valueOf(df.format(total)) + " gold", Toast.LENGTH_LONG).show();
+
+        //If user pressed Send All, send them back to Friends Activity regardless
+        backToFriends();
+
     }
 
 
+    //Method is identical to that used in Deposit Coins, except iterates over Spare Change
     private void updateList() {
         //In this method we update and fill the listView
         db.collection("users")
@@ -314,6 +368,7 @@ public class SpareChangeSend extends AppCompatActivity {
     }
 
 
+    //Method to return user back to Friends
     private void backToFriends() {
         Intent intent = new Intent(this,Friends.class);
         startActivity(intent);

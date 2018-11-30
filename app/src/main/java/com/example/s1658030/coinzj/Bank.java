@@ -76,6 +76,8 @@ public class Bank extends AppCompatActivity {
 
     }
 
+
+    //Simple function to start activity
     private void toDeposit() {
         //Create intent to change activity and pass previous bundle
         Intent intent = new Intent(this,DepositCoins.class);
@@ -83,12 +85,16 @@ public class Bank extends AppCompatActivity {
         startActivity(intent);
     }
 
+
+    //Simple function to start activity
     private void backToMenu() {
         //Create intent to change activity
         Intent intent = new Intent(this,MainMenu.class);
         startActivity(intent);
     }
 
+
+    //Simple function to start activity
     private void goToSendToSpareChange() {
         //Create intent to change activity and pass previous bundle
         Intent intent = new Intent(this, SendToSpareChange.class);
@@ -96,6 +102,8 @@ public class Bank extends AppCompatActivity {
         startActivity(intent);
     }
 
+
+    //Simple function to start activity
     private void goToGamble() {
         //Create intent to change activity and pass previous bundle
         Intent intent = new Intent(this, Gambling.class);

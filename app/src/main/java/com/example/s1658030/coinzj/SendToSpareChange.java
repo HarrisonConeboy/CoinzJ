@@ -14,25 +14,21 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 
-import javax.annotation.Nullable;
 
+//This class has many similarities with DepositCoins
 public class SendToSpareChange extends AppCompatActivity {
 
     private ListView listView;
-    private ArrayList<String> mWallet = new ArrayList<String>(50);
-    private ArrayList<Object> selectedCoins = new ArrayList<Object>();
+    //mWallet represents the wallet
+    private ArrayList<String> mWallet = new ArrayList<>(50);
+    private ArrayList<Object> selectedCoins = new ArrayList<>();
     private HashMap<String, Coin> coins = new HashMap<>();
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -41,16 +37,20 @@ public class SendToSpareChange extends AppCompatActivity {
 
     private ArrayAdapter arrayAdapter;
 
+
+    //==============================================================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send_to_spare_change);
 
-
+        //Update the listView and show wallet
         updateList();
 
         listView = findViewById(R.id.sendToSC);
 
+        //Set on click listener to listView, when a coins is clicked add/remove it to selected
+        // coins depending if it was previously present in the ArrayList
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -62,6 +62,7 @@ public class SendToSpareChange extends AppCompatActivity {
             }
         });
 
+        //Set listener for back button, when pressed go back to Bank
         Button mBack = findViewById(R.id.backBttn);
         mBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,6 +71,9 @@ public class SendToSpareChange extends AppCompatActivity {
             }
         });
 
+
+        //Set listener for transfer button, when pressed transfer
+        // coins in selectedCoins from Wallet to Spare Change
         Button mTransfer = findViewById(R.id.transferSelected);
         mTransfer.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,6 +83,7 @@ public class SendToSpareChange extends AppCompatActivity {
         });
 
 
+        //Set listener for transfer all button, when pressed transfer all the coins in Wallet
         Button mTransferAll = findViewById(R.id.transferAll);
         mTransferAll.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,6 +95,7 @@ public class SendToSpareChange extends AppCompatActivity {
     }
 
 
+    //Identical method to that in Deposit Coins
     private void updateList() {
         //In this method we update and fill the listView
         db.collection("users")
@@ -144,15 +150,17 @@ public class SendToSpareChange extends AppCompatActivity {
     }
 
 
-
+    //Method for transferring the coins in selectedCoins
     private void transferSelected() {
 
         int size = selectedCoins.size();
 
+        //Iterate over the size of selected coins
         for (int i = 0; i < size; i++) {
-
+            //Get the respective coin from the hashmap
             Coin coin = coins.get(selectedCoins.get(i));
 
+            //Create a new map object representing the coin to be added into the database
             HashMap<String,Object> temp = new HashMap<>();
 
             Double value = coin.getValue();
@@ -160,21 +168,40 @@ public class SendToSpareChange extends AppCompatActivity {
             temp.put("value",value);
             temp.put("currency",currency);
 
+            //Delete the coin from user's wallet
             db.collection("users").document(email)
                     .collection("Wallet").document(coin.getId()).delete();
+            //Add the coin into user's Spare Change
             db.collection("users").document(email)
                     .collection("Spare Change").document(coin.getId()).set(temp);
-
         }
 
-        if (selectedCoins.size() > 0) {
+        //Only if the user selected coins do we go here
+        if (size > 0) {
+
+            //If the user selected more than one coin to transfer we Toast and alert saying they
+            // successfully transferred one coi, else we use the plural: coins
+            if (selectedCoins.size() == 1) {
+                Toast.makeText(this, "You transferred: " + String
+                        .valueOf(selectedCoins.size()) + " coin", Toast.LENGTH_SHORT).show();
+            }
+            else {
+                Toast.makeText(this, "You transferred: " + String
+                        .valueOf(selectedCoins.size()) + " coins", Toast.LENGTH_SHORT).show();
+            }
+
+            //Go back to Bank
             goBack();
-        } else {
+
+        }//If the user did not select coins we Toast alert
+        else {
             Toast.makeText(this, "Please select some coins", Toast.LENGTH_SHORT).show();
         }
     }
 
 
+    //Method is identical to transferSelected, with the exception of using mWallet
+    // which represents all the coins within the Wallet to transfer
     private void transferAll() {
 
         int size = mWallet.size();
@@ -182,6 +209,7 @@ public class SendToSpareChange extends AppCompatActivity {
         for (int i = 0; i < size; i++) {
             Coin coin = coins.get(mWallet.get(i));
 
+            //Create coin map
             HashMap<String,Object> temp = new HashMap<>();
 
             Double value = coin.getValue();
@@ -189,17 +217,31 @@ public class SendToSpareChange extends AppCompatActivity {
             temp.put("value",value);
             temp.put("currency",currency);
 
+            //Add coin to Spare Change
             db.collection("users").document(email)
                     .collection("Spare Change").document(coin.getId()).set(temp);
 
+            //Remove coin from Wallet
             db.collection("users").document(email)
                     .collection("Wallet").document(coin.getId()).delete();
         }
+
+        //Select to Toast coin/coins
+        if (size == 1) {
+            Toast.makeText(this, "You transferred: " + String
+                    .valueOf(mWallet.size()) + " coin", Toast.LENGTH_SHORT).show();
+        }
+        else if (size > 1) {
+            Toast.makeText(this, "You transferred: " + String
+                    .valueOf(mWallet.size()) + " coins", Toast.LENGTH_SHORT).show();
+        }
+
+        //If the user pressed transferAll they are sent back to Bank regardless
         goBack();
     }
 
 
-
+    //Method called to go back to bank, which passes the bundle back it was given
     private void goBack() {
         Intent intent = new Intent(this, Bank.class);
         Bundle bundle = getIntent().getExtras();
