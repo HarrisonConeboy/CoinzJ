@@ -58,7 +58,7 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
     private LocationEngine locationEngine;
     private LocationLayerPlugin locationLayerPlugin;
     private String mapData;
-
+    private PermissionsManager permissionsManager;
 
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -107,6 +107,9 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
             //Additional UI settings
             map.getUiSettings().setCompassEnabled(true);
             map.getUiSettings().setZoomControlsEnabled(true);
+
+            //Enable the player's location
+            enableLocation();
 
             //Get all of the marker data from the mapData which was passed as an intent from Main
             // menu, we create a list of features and setup our icon factory for the marker icons
@@ -174,9 +177,6 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
                 }
             }
 
-            //Enable the player's location
-            enableLocation();
-
             //Display initially how many coins are in the Wallet by setting the TextView
             // to display the size of our Wallet collection
             db.collection("users")
@@ -225,7 +225,7 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
             initializeLocationLayer();
         } else {
             Log.d(tag,"Permissions not yet granted, adding manager");
-            PermissionsManager permissionsManager = new PermissionsManager(this);
+            permissionsManager = new PermissionsManager(this);
             permissionsManager.requestLocationPermissions(this);
         }
     }
@@ -300,11 +300,14 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
 
             //We check if each marker on the is within 0.00025 in
             // any direction away from the user's current location
+            Double latitude = location.getLatitude();
+            Double longitude = location.getLongitude();
+
             for (Marker m : map.getMarkers()) {
-                if (((location.getLatitude() <= m.getPosition().getLatitude()+ 0.00025) &&
-                        (location.getLatitude() >= m.getPosition().getLatitude() - 0.00025) &&
-                        ((location.getLongitude() <= m.getPosition().getLongitude()+ 0.00025) &&
-                                (location.getLongitude() >= m.getPosition().getLongitude() - 0.00025)))) {
+                if (((latitude <= m.getPosition().getLatitude()+ 0.00025) &&
+                        (latitude >= m.getPosition().getLatitude() - 0.00025) &&
+                        ((longitude <= m.getPosition().getLongitude()+ 0.00025) &&
+                                (longitude >= m.getPosition().getLongitude() - 0.00025)))) {
 
 
                     //Create Map object to store in database
@@ -344,33 +347,23 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
                     });
 
 
-                    //Add coin to collected section, to keep track of those all picked up
+                    //Add coin to collected section, to keep track of those all picked up,
+                    // and we also update the number of coins present in Wallet
                     db.collection("users").document(email)
-                            .collection("Collected").document(id).set(coin);
+                            .collection("Collected").document(id).set(coin)
+                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Integer size = Integer.parseInt(mWallet.getText().toString());
+                            mWallet.setText(String.valueOf(size + 1));
+                        }
+                    });
 
                     //Remove the marker from the map and play sound
                     removing(m);
+
                 }
             }
-
-
-            //Update and display the number of coins in the Wallet
-            db.collection("users")
-                    .document(email).collection("Wallet").get()
-                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                        //Set the mWallet Text
-                        @Override
-                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                            mWallet.setText(String.valueOf(queryDocumentSnapshots.size()));
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Toast.makeText(MapScreen.this, "Failed to get Wallet size",
-                            Toast.LENGTH_SHORT).show();
-                }
-            });
 
         }
     }
@@ -434,6 +427,13 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
         } else {
             Log.d(tag,"Permissions must be enabled");
         }
+    }
+
+
+    //Method in slides
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        permissionsManager.onRequestPermissionsResult(requestCode,permissions,grantResults);
     }
 
 
