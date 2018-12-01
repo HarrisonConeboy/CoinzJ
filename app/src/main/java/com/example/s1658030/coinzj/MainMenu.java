@@ -252,9 +252,9 @@ public class MainMenu extends AppCompatActivity {
                     }
                 });
     }
+
+
     //This method is used to reset the number of bankable coins per day
-
-
     private void updateDate() {
 
         //We have to create another formatter to set the date in yyyy-MM-dd format
@@ -270,19 +270,21 @@ public class MainMenu extends AppCompatActivity {
                     // if not update it and set Banked to be 0
                     @Override
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                        if (!queryDocumentSnapshots.getDocuments().get(0).getId().equals(todaysDateFormatted)) {
+                        if (!queryDocumentSnapshots.getDocuments().get(0)
+                                .getId().equals(todaysDateFormatted)) {
 
                             HashMap<String, Object> temp = new HashMap<>();
                             temp.put("Banked", 0);
 
                             //Update for recent
                             db.collection("users").document(email)
-                                    .collection("RecentDate").document(todaysDateFormatted).set(temp);
+                                    .collection("RecentDate")
+                                    .document(todaysDateFormatted).set(temp);
 
                             //Delete previous
-                            db.collection("users").document(email)
-                                    .collection("RecentDate")
-                                    .document(queryDocumentSnapshots.getDocuments().get(0).getId()).delete();
+                            db.collection("users").document(email).collection
+                                    ("RecentDate").document(queryDocumentSnapshots
+                                    .getDocuments().get(0).getId()).delete();
 
                         }
                     }

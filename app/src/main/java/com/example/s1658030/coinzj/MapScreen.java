@@ -105,7 +105,7 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
             map = mapboxMap;
 
             //Additional UI settings
-            map.getUiSettings().setCompassEnabled(true);
+            map.getUiSettings().setCompassEnabled(false);
             map.getUiSettings().setZoomControlsEnabled(true);
 
             //Enable the player's location
@@ -306,14 +306,14 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
             for (Marker m : map.getMarkers()) {
                 if (((latitude <= m.getPosition().getLatitude()+ 0.00025) &&
                         (latitude >= m.getPosition().getLatitude() - 0.00025) &&
-                        ((longitude <= m.getPosition().getLongitude()+ 0.00025) &&
+                        ((longitude <= m.getPosition().getLongitude() + 0.00025) &&
                                 (longitude >= m.getPosition().getLongitude() - 0.00025)))) {
 
 
                     //Create Map object to store in database
                     Map<String,Object> coin = new HashMap<>();
 
-                    //Get relevant information and set it in the map, ie value and currency
+                    //Get relevant information from the HashMap, ie value and currency
                     String id = m.getSnippet();
                     Double value = coins.get(id).getValue();
                     String currency = coins.get(id).getCurrency();
@@ -432,7 +432,8 @@ public class MapScreen extends AppCompatActivity implements OnMapReadyCallback,
 
     //Method in slides
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         permissionsManager.onRequestPermissionsResult(requestCode,permissions,grantResults);
     }
 

@@ -190,7 +190,8 @@ public class DepositCoins extends AppCompatActivity {
                         //We delete the previous object
                         db.collection("users")
                                 .document(email).collection("RecentDate")
-                                .document(queryDocumentSnapshots.getDocuments().get(0).getId()).delete();
+                                .document(queryDocumentSnapshots.getDocuments()
+                                        .get(0).getId()).delete();
 
                         banked = 0;
 
@@ -228,7 +229,8 @@ public class DepositCoins extends AppCompatActivity {
                         @Override
                         public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
 
-                            if (!queryDocumentSnapshots.getDocuments().get(0).getId().equals(todaysDate)) {
+                            if (!queryDocumentSnapshots.getDocuments()
+                                    .get(0).getId().equals(todaysDate)) {
 
                                 HashMap<String,Object> fresh = new HashMap<>();
                                 fresh.put("Banked",0);
@@ -238,7 +240,8 @@ public class DepositCoins extends AppCompatActivity {
 
                                 db.collection("users")
                                         .document(email).collection("RecentDate")
-                                        .document(queryDocumentSnapshots.getDocuments().get(0).getId()).delete();
+                                        .document(queryDocumentSnapshots.getDocuments()
+                                                .get(0).getId()).delete();
 
                                 banked = 0;
 
