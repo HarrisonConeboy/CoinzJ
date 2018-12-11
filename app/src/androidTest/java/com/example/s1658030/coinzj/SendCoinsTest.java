@@ -35,18 +35,17 @@ import static org.hamcrest.Matchers.is;
 //Like all tests, this can only ever be run once, due to it using a
 // pre setup account to demonstrate the functionality of certain aspects of the app
 @RunWith(AndroidJUnit4.class)
-public class AddAndRemoveFriends {
+public class SendCoinsTest {
 
     @Rule
     public ActivityTestRule<SignIn> mActivityTestRule = new ActivityTestRule<>(SignIn.class);
 
-
     @Test
-    public void addAndRemoveFriends() {
+    public void sendCoinsTest() {
 
-        //Firstly we create a new account named add@friend.com
+        //Fill in emailField with the relevant setup account
         try {
-            Thread.sleep(1000);
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -58,10 +57,10 @@ public class AddAndRemoveFriends {
                                         0),
                                 0),
                         isDisplayed()));
-        emailField.perform(replaceText("add@friend.com"), closeSoftKeyboard());
+        emailField.perform(replaceText("send@coinz.com"), closeSoftKeyboard());
 
 
-        //We now set their password to be an awful 12345678
+        //Fill in the password field for the account
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -78,24 +77,24 @@ public class AddAndRemoveFriends {
         passwordField.perform(replaceText("12345678"), closeSoftKeyboard());
 
 
-        //Now a simple click on the Sign Up button
+        //Now we log the user in pressing the login button
         try {
-            Thread.sleep(2000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        ViewInteraction signUpButton = onView(
-                allOf(withId(R.id.signUpButton), withText("Sign Up"),
+        ViewInteraction loginButton = onView(
+                allOf(withId(R.id.loginButton), withText("Login"),
                         childAtPosition(
                                 childAtPosition(
                                         withId(android.R.id.content),
                                         0),
-                                3),
+                                2),
                         isDisplayed()));
-        signUpButton.perform(click());
+        loginButton.perform(click());
 
 
-        //Next from the Main Menu, we press on Friends to take us to the Friends Activity
+        //Now we navigate to the friends section
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
@@ -112,7 +111,7 @@ public class AddAndRemoveFriends {
         friendsButton.perform(click());
 
 
-        //Now we enter a friend's email being "new@friend.com" into the EditText
+        //Now we enter a valid username in the edit text to add a friend
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
@@ -129,7 +128,7 @@ public class AddAndRemoveFriends {
         friendUsername.perform(replaceText("new@friend.com"), closeSoftKeyboard());
 
 
-        //Now we press the button Add Friend, which should result in it being displayed
+        //Press the "Add Friend" button
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -146,127 +145,121 @@ public class AddAndRemoveFriends {
         addFriend.perform(click());
 
 
-        //We now attempt to add ourselves, first by typing our email into the EditText
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        friendUsername.perform(replaceText("add@friend.com"), closeSoftKeyboard());
-
-
-        //Next a simple press on the Add Friend button, which should result in a Toast alerting us
-        // that we are unable top add ourselves
+        //We press on the newly added friend opening a dialog object
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        addFriend.perform(click());
-
-
-        //Now we will add another friend, we enter "another@friend.com" into the EditText
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        friendUsername.perform(replaceText("another@friend.com"), closeSoftKeyboard());
-
-
-        //Another press on Add Friend should add and update the listView
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        addFriend.perform(click());
-
-
-        //Now we try to add a username which does not exist, "non@existent.com"
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        friendUsername.perform(replaceText("non@existent.com"), closeSoftKeyboard());
-
-
-        //Again we press Add Friend which results in a failure to add the friend
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        addFriend.perform(click());
-
-
-        //Finally we will remove all of our friends added,
-        // first by pressing on the top friend's name
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        DataInteraction appCompatTextView = onData(anything())
+        DataInteraction firstFriend = onData(anything())
                 .inAdapterView(allOf(withId(R.id.friends),
                         childAtPosition(
                                 withId(R.id.rl2),
                                 0)))
                 .atPosition(0);
-        appCompatTextView.perform(click());
+        firstFriend.perform(click());
 
 
-        //Next we press the Remove Friend option in the Dialog,
-        // this removes the friend from the listView
+        //Select send from wallet on the dialog
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        DataInteraction appCompatTextView2 = onData(anything())
+        DataInteraction dialog = onData(anything())
                 .inAdapterView(allOf(withClassName(is("com.android.internal.app.AlertController$RecycleListView")),
                         childAtPosition(
                                 withClassName(is("android.widget.FrameLayout")),
-                                0)))
-                .atPosition(2);
-        appCompatTextView2.perform(click());
+                                0)));
+        dialog.atPosition(0).perform(click());
 
 
-        //Now we follow the same steps as before to remove the second friend
+        //Next we select one by one all of the coins within the wallet to send to our new friend
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        DataInteraction appCompatTextView3 = onData(anything())
-                .inAdapterView(allOf(withId(R.id.friends),
+        DataInteraction listView = onData(anything())
+                .inAdapterView(allOf(withId(R.id.walletSend),
                         childAtPosition(
-                                withId(R.id.rl2),
-                                0)))
-                .atPosition(0);
-        appCompatTextView3.perform(click());
+                                withId(R.id.rl),
+                                0)));
+        listView.atPosition(0).perform(click());
 
 
-        //Press Remove Friend on Dialog
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        listView.atPosition(1).perform(click());
 
-        DataInteraction appCompatTextView4 = onData(anything())
-                .inAdapterView(allOf(withClassName(is("com.android.internal.app.AlertController$RecycleListView")),
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        listView.atPosition(2).perform(click());
+
+
+        //Now that all of the coins have been selected, we press the send coins button
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        ViewInteraction sendCoinsWallet = onView(
+                allOf(withId(R.id.sendcoinsbutton2), withText("Send Coins"),
                         childAtPosition(
-                                withClassName(is("android.widget.FrameLayout")),
-                                0)))
-                .atPosition(2);
-        appCompatTextView4.perform(click());
+                                childAtPosition(
+                                        withId(android.R.id.content),
+                                        0),
+                                3),
+                        isDisplayed()));
+        sendCoinsWallet.perform(click());
 
 
-        //Contemplate decisions for 3 seconds
+        //Now we are returned to the Friends activity, we must select the friend again
         try {
             Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        firstFriend.perform(click());
+
+
+        //Now we select the second option given on the dialog
+        // to send coins to the friend from our Spare Change
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        dialog.atPosition(1).perform(click());
+
+
+        //In this activity we will simply press the "Send All" button
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        ViewInteraction sendAllCoins = onView(
+                allOf(withId(R.id.sendAll), withText("Send All Coins"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(android.R.id.content),
+                                        0),
+                                6),
+                        isDisplayed()));
+        sendAllCoins.perform(click());
+
+
+        //Final contemplation
+        try {
+            Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

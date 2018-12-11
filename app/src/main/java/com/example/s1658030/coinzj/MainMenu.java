@@ -49,6 +49,7 @@ public class MainMenu extends AppCompatActivity {
     private String peny;
     private Intent svc;
     private String gold;
+    private Switch music;
 
     //Initialize Firebase objects
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -67,6 +68,9 @@ public class MainMenu extends AppCompatActivity {
             email = mAuth.getCurrentUser().getEmail();
         }
 
+        SharedPreferences settings = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE);
+        boolean checked = settings.getBoolean("checked",true);
+
         //Start a new background sound service in order to play music
         svc = new Intent(this, BackgroundSoundService.class);
         svc.setAction("com.example.s1658030.coinzj.BackgroundSoundService");
@@ -78,7 +82,8 @@ public class MainMenu extends AppCompatActivity {
         updateDate();
 
         //Get switch in layout and set listener to stop/start music depending on changed state
-        Switch music = findViewById(R.id.musicSwitch);
+        music = findViewById(R.id.musicSwitch);
+        music.setChecked(checked);
         music.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -91,7 +96,7 @@ public class MainMenu extends AppCompatActivity {
         });
 
         //Check the state of the switch, start music if is checked
-        if (music.isChecked()) {
+        if (checked) {
             startService(svc);
         }
 
@@ -315,6 +320,7 @@ public class MainMenu extends AppCompatActivity {
         editor.putString("dolr",dolr);
         editor.putString("quid",quid);
         editor.putString("peny",peny);
+        editor.putBoolean("checked",music.isChecked());
         editor.apply();
     }
 

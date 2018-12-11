@@ -8,6 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -25,6 +27,8 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 
 
+//Like all tests, this can only ever be run once, due to it using a
+// pre setup account to demonstrate the functionality of certain aspects of the app
 @RunWith(AndroidJUnit4.class)
 public class CreaterNewUserAndLogin {
 
@@ -173,6 +177,8 @@ public class CreaterNewUserAndLogin {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        mAuth.signOut();
     }
 
     private static Matcher<View> childAtPosition(

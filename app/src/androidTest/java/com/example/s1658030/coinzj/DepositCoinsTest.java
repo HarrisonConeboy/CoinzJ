@@ -10,6 +10,8 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 
 
+import com.google.firebase.auth.FirebaseAuth;
+
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -29,6 +31,8 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
 
 
+//Like all tests, this can only ever be run once, due to it using a
+// pre setup account to demonstrate the functionality of certain aspects of the app
 @RunWith(AndroidJUnit4.class)
 public class DepositCoinsTest {
 
@@ -268,6 +272,8 @@ public class DepositCoinsTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        mAuth.signOut();
     }
 
     private static Matcher<View> childAtPosition(
